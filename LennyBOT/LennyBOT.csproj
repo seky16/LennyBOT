@@ -5,4 +5,27 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="0.9.9" />
+    <PackageReference Include="AngleSharp.Scripting.JavaScript" Version="0.5.1" />
+    <PackageReference Include="CsfdAPI" Version="2017.5.4.2" />
+    <PackageReference Include="Discord.Net" Version="1.0.2-build-00808" />
+    <PackageReference Include="SteamStoreQuery" Version="1.0.3" />
+    <PackageReference Include="SteamWebAPI" Version="1.0.14.42195" />
+    <PackageReference Include="Urbandictionary" Version="1.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Files\kevin.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Files\randFacts.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
