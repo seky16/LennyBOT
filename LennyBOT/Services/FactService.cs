@@ -1,33 +1,35 @@
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.IO;
-
+// ReSharper disable StyleCop.SA1600
 namespace LennyBOT.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Threading.Tasks;
+
     public class FactService
     {
-        List<string> randomFacts;
-        int numOfFacts = 0;
+        private readonly List<string> randomFacts;
+
+        private readonly int numOfFacts;
 
         public FactService()
         {
-            randomFacts = new List<string>();
-            StreamReader sr = File.OpenText(AppDomain.CurrentDomain.BaseDirectory + "/files/randFacts.txt");
-            string s = String.Empty;
+            this.randomFacts = new List<string>();
+            var sr = File.OpenText(AppDomain.CurrentDomain.BaseDirectory + "/files/randFacts.txt");
+            string s;
             while ((s = sr.ReadLine()) != null)
             {
-                randomFacts.Add(s);
-                numOfFacts++;
+                this.randomFacts.Add(s);
+                this.numOfFacts++;
             }
         }
 
-        public async Task<string> GetFact()
+        public async Task<string> GetFactAsync()
         {
             var rand = new RandomService();
-            int randomFactIndex = rand.Between(0, numOfFacts - 1);
-            string factToPost = randomFacts[randomFactIndex];
-            await Task.Delay(0);
+            var randomFactIndex = rand.Between(0, this.numOfFacts - 1);
+            var factToPost = this.randomFacts[randomFactIndex];
+            await Task.Delay(0).ConfigureAwait(false);
             return factToPost;
         }
     }
