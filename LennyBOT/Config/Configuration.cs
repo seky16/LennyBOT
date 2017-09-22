@@ -10,26 +10,28 @@
     /// A file that contains information you either don't want public
     /// or will want to change without having to compile another bot.
     /// </summary>
+    // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
     public class Configuration
     {
-        /// <summary> Gets Ids of users who will have owner access to the bot. </summary>
-        public IEnumerable<ulong> Owners { get; } = null;
+        /// <summary> Gets or sets Ids of users who will have owner access to the bot. </summary>
+        public IEnumerable<ulong> Owners { get; set; } = null;
 
-        /// <summary> Gets your bot's command prefix. </summary>
-        public char Prefix { get; } = '?';
+        /// <summary> Gets or sets your bot's command prefix. </summary>
+        public char Prefix { get; set; } = '?';
 
-        /// <summary> Gets your bot's login token. </summary>
-        public string Token { get; private set; } = string.Empty;
+        /// <summary> Gets or sets your bot's login token. </summary>
+        // ReSharper disable once MemberCanBePrivate.Global
+        public string Token { get; set; } = string.Empty;
 
-        /// <summary> Gets Steam API key. </summary>
-        public string SteamApiKey { get; } = string.Empty;
+        /// <summary> Gets or sets Steam API key. </summary>
+        public string SteamApiKey { get; set; } = string.Empty;
 
-        /// <summary> Gets Osu API key. </summary>
-        public string OsuApiKey { get; } = string.Empty;
+        /// <summary> Gets or sets Osu API key. </summary>
+        public string OsuApiKey { get; set; } = string.Empty;
 
         /// <summary> Gets the path of your bot's configuration file. </summary>
         [JsonIgnore]
-        private static string FileName { get; } = "files/config.json";
+        private static string FileName { get; } = "Files\\config.json";
 
         /// <summary>
         /// Ensures the config file exists, if not it creates it.
