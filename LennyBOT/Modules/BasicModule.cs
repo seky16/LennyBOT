@@ -1,128 +1,136 @@
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using LennyBOT.Config;
-using LennyBOT.Services;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
-
-
+// ReSharper disable StyleCop.SA1600
+// ReSharper disable UnusedMember.Global
 namespace LennyBOT.Modules
 {
+    using System.Linq;
+    using System.Threading.Tasks;
+
+    using Discord;
+    using Discord.Commands;
+    using Discord.WebSocket;
+
+    using LennyBOT.Config;
+    using LennyBOT.Services;
+
     [Name("Basic")]
     public class BasicModule : ModuleBase<SocketCommandContext>
     {
-        private readonly FactService _service;
+        private readonly FactService service;
 
         public BasicModule(FactService service)
         {
-            _service = service;
+            this.service = service;
         }
 
         [Command("nick")]
         [Remarks("Make the bot change your nick")]
         [MinPermissions(AccessLevel.User)]
-        public async Task NickCmd([Remainder]string name)
+        public async Task NickCmdAsync([Remainder]string name)
         {
-            var user = Context.User as SocketGuildUser;
-            await user.ModifyAsync(x => x.Nickname = name);
-            await ReplyAsync($"{user.Mention} I changed your name to **{name}**");
+            if (this.Context.User is SocketGuildUser user)
+            {
+                await user.ModifyAsync(x => x.Nickname = name).ConfigureAwait(false);
+                await this.ReplyAsync($"{user.Mention} I changed your name to **{name}**").ConfigureAwait(false);
+            }
         }
 
         [Command("kevin")]
-        //[Remarks("Make the bot say something")]
         [MinPermissions(AccessLevel.User)]
-        public async Task KevCmd()
+        public Task KevCmdAsync()
         {
-            await Context.Channel.SendFileAsync("files/kevin.jpg");
+            return this.Context.Channel.SendFileAsync("files/kevin.jpg");
         }
 
         [Command("fact")]
         [Remarks("Post random fact")]
         [MinPermissions(AccessLevel.User)]
-        public async Task FactCmd()
+        public async Task FactCmdAsync()
         {
-            string factToPost = await _service.GetFact();
-            await ReplyAsync(factToPost);
+            var factToPost = await this.service.GetFactAsync().ConfigureAwait(false);
+            await this.ReplyAsync(factToPost).ConfigureAwait(false);
         }
 
         [Command("userinfo"), Alias("user", "u", "whois")]
         [Remarks("Get info about user")]
         [MinPermissions(AccessLevel.User)]
-        public async Task UserInfoCmd(SocketUser user = null)
+        public Task UserInfoCmdAsync(SocketUser user = null)
         {
-            user = user ?? Context.User;
+            user = user ?? this.Context.User;
 
             var g = user.Game.ToString();
-            if (String.IsNullOrWhiteSpace(g)) { g = "*None*"; }
-
-            var roles = (user as IGuildUser).RoleIds;
-            string r = null;
-            foreach (var role in roles)
+            if (string.IsNullOrWhiteSpace(g))
             {
-                var rol = Context.Guild.GetRole(role);
-                r = r + rol.ToString() + "; ";
+                g = "*None*";
             }
-            r = r.Remove(r.Length - 2);
+
+            var roles = (user as IGuildUser)?.RoleIds;
+            string r = null;
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            if (roles != null)
+            {
+                foreach (var role in roles)
+                {
+                    var rol = this.Context.Guild.GetRole(role);
+                    r = r + rol + "; ";
+                }
+            }
+
+            r = r?.Remove(r.Length - 2);
 
             var nick = (user as IGuildUser)?.Nickname ?? user.Username;
-            //if (String.IsNullOrWhiteSpace(nick)) { nick = user.Username; }
 
-            await ReplyAsync($"```\n" +
-                                $"username: {user.ToString()}\n" +
-                                $"nickname: {nick}\n" +
-                                $"      id: {user.Id}\n" +
-                                $" created: {user.CreatedAt}\n" +
-                                $"  joined: {(user as IGuildUser).JoinedAt}\n" +
-                                $"  status: {user.Status}\n" +
-                                $" playing: {g}\n" +
-                                $"   roles: {r}\n" +
-                                $"```");
-            //\n avatar: {user.GetAvatarUrl()}");
+            // if (String.IsNullOrWhiteSpace(nick)) { nick = user.Username; }
+            return this.ReplyAsync($"```\nusername: {user}\nnickname: {nick}\n      id: {user.Id}\n created: {user.CreatedAt}\n  joined: {(user as IGuildUser)?.JoinedAt}\n  status: {user.Status}\n playing: {g}\n   roles: {r}\n```");
+
+            // \n avatar: {user.GetAvatarUrl()}");
         }
 
         [Command("quote", RunMode = RunMode.Async), Alias("q")]
         [Remarks("quote message")]
         [MinPermissions(AccessLevel.User)]
-        public async Task QuoteCmd(ulong id)
+        public async Task QuoteCmdAsync(ulong id)
         {
             IMessage msg = null;
-            var bot = Context.Guild.CurrentUser;
-            foreach (var ch in Context.Guild.TextChannels)
+            var bot = this.Context.Guild.CurrentUser;
+            foreach (var ch in this.Context.Guild.TextChannels)
             {
-                if (!(ch.Users.Contains(bot))) continue;
-                msg = await ch.GetMessageAsync(id);
-                if (msg != null) break;
+                if (!ch.Users.Contains(bot))
+                {
+                    continue;
+                }
+
+                msg = await ch.GetMessageAsync(id).ConfigureAwait(false);
+                if (msg != null)
+                {
+                    break;
+                }
             }
-            //msg = await Context.Channel.GetMessageAsync(id);
+
+            // msg = await Context.Channel.GetMessageAsync(id);
             if (msg == null)
-                await ReplyAsync($"Could not find message with id {id} in this guild.");
-            else if (!(msg.Embeds.Count == 0))
-                await ReplyAsync($"You cannot quote embed message.");
-            else if (!(msg.Attachments.Count == 0))
-                await ReplyAsync($"You cannot quote message with attachment.");
+            {
+                await this.ReplyAsync($"Could not find message with id {id} in this guild.").ConfigureAwait(false);
+            }
+            else if (msg.Embeds.Count != 0)
+            {
+                await this.ReplyAsync("You cannot quote embed message. Coming soon™.").ConfigureAwait(false);
+            }
+            else if (msg.Attachments.Count != 0)
+            {
+                await this.ReplyAsync("You cannot quote message with attachment. Coming soon™.").ConfigureAwait(false);
+            }
             else
             {
                 var author = msg.Author as SocketGuildUser;
-                string nick = author?.Nickname ?? msg.Author.Username;
-                Color color = author.Roles.OrderByDescending(x => x.Position).FirstOrDefault().Color;
-                var guildIcon = author.Guild.IconUrl;
-                Embed embed = new EmbedBuilder()
-                    .WithDescription(msg.Content)
-                    .WithColor(color)
-                    .WithFooter(footer =>
-                    {
-                        footer
-                            .WithText($"#{msg.Channel}")
-                            .WithIconUrl(guildIcon);
-                    })
-                    .WithTimestamp(msg.Timestamp)
-                    .WithAuthor(new EmbedAuthorBuilder()
-                        .WithName(nick ?? "")
-                        .WithIconUrl(author?.GetAvatarUrl() ?? ""))
-                    .Build();
-                await ReplyAsync("", false, embed);
+                var nick = author?.Nickname ?? msg.Author.Username;
+                var color = author?.Roles.OrderByDescending(x => x.Position).FirstOrDefault()?.Color ?? Color.Default;
+                var guildIcon = author?.Guild.IconUrl;
+                var embed = new EmbedBuilder().WithDescription(msg.Content).WithColor(color)
+                    .WithFooter(footer => { footer.WithText($"#{msg.Channel}").WithIconUrl(guildIcon); })
+                    .WithTimestamp(msg.Timestamp).WithAuthor(
+                        new EmbedAuthorBuilder().WithName(nick ?? string.Empty)
+                            .WithIconUrl(author?.GetAvatarUrl() ?? string.Empty)).Build();
+                await this.ReplyAsync(string.Empty, false, embed).ConfigureAwait(false);
             }
         }
     }

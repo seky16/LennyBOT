@@ -1,6 +1,9 @@
-using Discord.Commands;
-using LennyBOT.Config;
+// ReSharper disable StyleCop.SA1600
 using System.Threading.Tasks;
+
+using Discord.Commands;
+
+using LennyBOT.Config;
 using LennyBOT.Services;
 
 namespace LennyBOT.Modules
@@ -12,7 +15,7 @@ namespace LennyBOT.Modules
 
         public RandomModule(RandomService service)
         {
-            _service = service;
+            this._service = service;
         }
 
         [Command("random"), Alias("rand")]
@@ -20,8 +23,8 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task RandCmd(int from = 1, int to = 100)
         {
-            int r = _service.Between(from, to);
-            await ReplyAsync(r.ToString());
+            var r = this._service.Between(from, to);
+            await this.ReplyAsync(r.ToString());
         }
 
         [Command("coin"), Alias("flip")]
@@ -29,12 +32,12 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task CoinCmd()
         {
-            int r = _service.Between(1, 2);
+            var r = this._service.Between(1, 2);
             string res = null;
             if (r == 1) { res = "Heads"; }
             else if (r == 2) { res = "Tails"; }
             else { res = "err"; }
-            await ReplyAsync(res);
+            await this.ReplyAsync(res);
         }
 
         [Command("choose"), Alias("decide")]
@@ -42,8 +45,8 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task DecideCmd(params string[] args)
         {
-            int r = _service.Between(0, args.Length - 1);
-            await ReplyAsync(args[r]);
+            var r = this._service.Between(0, args.Length - 1);
+            await this.ReplyAsync(args[r]);
         }
 
         [Command("dice"), Alias("roll")]
@@ -53,26 +56,26 @@ namespace LennyBOT.Modules
         {
             if (number <= 0)
             {
-                await ReplyAsync("Number of throws cannot be less or equal than 0.");
+                await this.ReplyAsync("Number of throws cannot be less or equal than 0.");
             }
             else if (sides <= 0)
             {
-                await ReplyAsync("Number of sides cannot be less or equal than 0");
+                await this.ReplyAsync("Number of sides cannot be less or equal than 0");
             }
             else {
 
             int roll;
             string res = null;
-            int sum = 0;
+            var sum = 0;
 
-            for (int i = 0; i < number; i++)
+            for (var i = 0; i < number; i++)
             {
-                roll = _service.Between(1, sides);
+                roll = this._service.Between(1, sides);
                 res += " " + roll.ToString();
                 sum += roll;
             }
 
-            await ReplyAsync($"Rolled:{res}\nSum: {sum}");
+            await this.ReplyAsync($"Rolled:{res}\nSum: {sum}");
         }}
     }
 }

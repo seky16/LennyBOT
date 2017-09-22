@@ -1,7 +1,10 @@
-﻿using Discord.Commands;
+﻿// ReSharper disable StyleCop.SA1600
+using System.Threading.Tasks;
+
+using Discord.Commands;
+
 using LennyBOT.Config;
 using LennyBOT.Services;
-using System.Threading.Tasks;
 
 namespace LennyBOT.Modules
 {
@@ -12,7 +15,7 @@ namespace LennyBOT.Modules
 
         public PlayerModule(ShekelsService shekels)
         {
-            _shekels = shekels;
+            this._shekels = shekels;
         }
 
         [Command("play", RunMode = RunMode.Async), Alias("p")]
@@ -20,21 +23,20 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.BotOwner)]
         public async Task PlayCmd()
         {
-            await _shekels.Download(Context);
-            var p = _shekels.GetPlayer(123);
-            //await _service.Upload(Context, Export());
+            await this._shekels.DownloadAsync(this.Context);
+            var p = this._shekels.GetPlayer(123);
+
+            // await _service.Upload(Context, Export());
             p.AddShekels(10);
-            _shekels.AddOrUpdatePlayer(p);
-            await _shekels.Upload(Context, _shekels.Export());
+            this._shekels.AddOrUpdatePlayer(p);
+            await ShekelsService.UploadAsync(this.Context, this._shekels.Export());
             p.RemoveShekels(5);
-            _shekels.AddOrUpdatePlayer(p);
-            await _shekels.Upload(Context, _shekels.Export());
+            this._shekels.AddOrUpdatePlayer(p);
+            await ShekelsService.UploadAsync(this.Context, this._shekels.Export());
 
-            //await ReplyAsync($"id: {p.Id}; \nshekels: {p.Shekels};");
-            //p.RemoveShekels(5);
-            //await ReplyAsync($"id: {p.Id}; \nshekels: {p.Shekels};");
-
+            // await ReplyAsync($"id: {p.Id}; \nshekels: {p.Shekels};");
+            // p.RemoveShekels(5);
+            // await ReplyAsync($"id: {p.Id}; \nshekels: {p.Shekels};");
         }
-
     }
 }

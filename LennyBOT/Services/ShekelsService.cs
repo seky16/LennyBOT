@@ -1,37 +1,59 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
+﻿// ReSharper disable StyleCop.SA1600
 
 namespace LennyBOT.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Threading.Tasks;
+
+    using Discord;
+    using Discord.Commands;
+    using Discord.WebSocket;
+
     public class ShekelsService
     {
-        List<Player> players = new List<Player>();
+        private readonly List<Player> players = new List<Player>();
+
+        public static Task UploadAsync(SocketCommandContext context, string output)
+        {
+            var channel = context.Client.GetChannel(332508519179878400) as SocketTextChannel;
+            return channel?.SendMessageAsync(output);
+        }
 
         public void AddOrUpdatePlayer(Player player)
         {
-            bool added = false;
-            foreach (var p in players)
+            var added = false;
+            foreach (var p in this.players)
             {
-                if (p.Id == player.Id) { p.Shekels = player.Shekels; added = true; break; }
-                else continue;
+                if (p.Id != player.Id)
+                {
+                    continue;
+                }
+
+                p.Shekels = player.Shekels;
+                added = true;
+                break;
             }
-            if (added == false) { players.Add(player); }
+
+            if (added == false)
+            {
+                this.players.Add(player);
+            }
         }
 
         public Player GetPlayer(ulong id)
         {
             Player p = null;
-            foreach (var player in players)
+            foreach (var player in this.players)
             {
-                if (player.Id == id) { p = player; }
-                else continue;
+                if (player.Id == id)
+                {
+                    p = player;
+                }
             }
+
             // check if null -> new Player(id, 0)
             p = p ?? new Player(id, 0);
             return p;
@@ -40,69 +62,41 @@ namespace LennyBOT.Services
         public string Export()
         {
             string ex = null;
-            foreach (var player in players)
+
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            foreach (var player in this.players)
             {
                 ex = ex + player.Id + " " + player.Shekels + "\n";
             }
+
             return ex;
         }
 
-        public void Import(IMessage message)
+        public async Task DownloadAsync(SocketCommandContext context)
         {
-            string str = message.Content;
-            var sr = new StringReader(str);
-            string s = String.Empty;
-            while ((s = sr.ReadLine()) != null)
+            if (context.Client.GetChannel(332508519179878400) is SocketTextChannel channel)
             {
-                char[] separator = null;
-                string[] split = s.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                //string[] split = s.Split(new Char[] {';', ' '});
-                ulong id = Convert.ToUInt64(split[0]);
-                int shekels = Convert.ToInt32(split[1]);
-                var p = new Player(id, shekels);
-                AddOrUpdatePlayer(p);
+                var msgEnum = await channel.GetMessagesAsync(1).Flatten().ConfigureAwait(false);
+                var msg = msgEnum.FirstOrDefault();
+                this.Import(msg);
             }
         }
 
-        public async Task Download(SocketCommandContext context)
+        private void Import(IMessage message)
         {
-            var channel = context.Client.GetChannel(332508519179878400) as SocketTextChannel;
-            var msgEnum = await channel.GetMessagesAsync(1).Flatten();
-            var msg = msgEnum.FirstOrDefault();
-            Import(msg);
-        }
+            var str = message.Content;
+            var sr = new StringReader(str);
+            string s;
+            while ((s = sr.ReadLine()) != null)
+            {
+                var split = s.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
 
-        public async Task Upload(SocketCommandContext context, string output)
-        {
-            var channel = context.Client.GetChannel(332508519179878400) as SocketTextChannel;
-            await channel.SendMessageAsync(output);
-        }
-    }
-
-    public class Player
-    {
-        public ulong Id { get; set; }
-        public int Shekels { get; set; }
-
-        public Player(ulong id, int shekels)
-        {
-            Id = id;
-            Shekels = shekels;
-        }
-        public Player(IUser user, int shekels)
-        {
-            Id = user.Id;
-            Shekels = shekels;
-        }
-
-        public void AddShekels(int amount)
-        {
-            Shekels = Shekels + amount;
-        }
-
-        public void RemoveShekels(int amount)
-        {
-            Shekels = Shekels - amount;
+                // string[] split = s.Split(new Char[] {';', ' '});
+                var id = Convert.ToUInt64(split[0]);
+                var shekels = Convert.ToInt32(split[1]);
+                var p = new Player(id, shekels);
+                this.AddOrUpdatePlayer(p);
+            }
         }
     }
 }

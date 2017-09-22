@@ -1,22 +1,30 @@
-﻿using System;
+﻿// ReSharper disable StyleCop.SA1600
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
+using AngleSharp;
+
+using CsfdAPI;
+
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+
 using LennyBOT.Config;
 using LennyBOT.Services;
-using AngleSharp;
-using SteamStoreQuery;
-using PortableSteam;
-using System.IO;
-using System.Text;
-using System.Net.Http;
+
 using Newtonsoft.Json;
-using CsfdAPI;
+
+using PortableSteam;
+
+using SteamStoreQuery;
 
 namespace LennyBOT.Modules
 {
@@ -27,7 +35,7 @@ namespace LennyBOT.Modules
 
         public SearchModule(SearchService service)
         {
-            _service = service;
+            this._service = service;
         }
 
         [Command("define", RunMode = RunMode.Async)]
@@ -36,7 +44,7 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task DefineCmd([Remainder]string query)
         {
-            var myDefiniton = await _service.UrbanClient.GetWordAsync(query);
+            var myDefiniton = await this._service.UrbanClient.GetWordAsync(query);
             var defList = myDefiniton.List;
 
             var builder = new EmbedBuilder()
@@ -51,22 +59,25 @@ namespace LennyBOT.Modules
                         .WithUrl("https://urbandictionary.com")
                         .WithIconUrl("https://d2gatte9o95jao.cloudfront.net/assets/apple-touch-icon-55f1ee4ebfd5444ef5f8d5ba836a2d41.png");
                 });
-            for (int i = 0; i < Math.Min(3, defList.Count()); i++)
+            for (var i = 0; i < Math.Min(3, defList.Count()); i++)
             {
-                string def = defList[i].Definition;
+                var def = defList[i].Definition;
                 if (def.Length > 250)
                 {
                     def = def.Substring(0, 250) + "…";
                 }
-                string ex = defList[i].Example;
+
+                var ex = defList[i].Example;
                 if (ex.Length > 1010)
                 {
                     ex = ex.Substring(0, 1010) + "…";
                 }
+
                 builder.AddField($"{i + 1}: {def}", $"Example: {ex}");
             }
+
             var embed = builder.Build();
-            await ReplyAsync(String.Empty, false, embed);
+            await this.ReplyAsync(string.Empty, false, embed);
         }
 
         [Command("youtube", RunMode = RunMode.Async)]
@@ -75,8 +86,8 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task YouTubeCmd([Remainder]string query)
         {
-            string html = new WebClient().DownloadString("https://www.youtube.com/results?search_query=" + Regex.Replace(query, @"\s+", "+"));
-            await ReplyAsync("https://www.youtube.com/watch?" + Regex.Split(Regex.Split(html, @"\/watch\?")[1], "\"")[0]);
+            var html = new WebClient().DownloadString("https://www.youtube.com/results?search_query=" + Regex.Replace(query, @"\s+", "+"));
+            await this.ReplyAsync("https://www.youtube.com/watch?" + Regex.Split(Regex.Split(html, @"\/watch\?")[1], "\"")[0]);
         }
 
         // todo: implement api
@@ -97,9 +108,9 @@ namespace LennyBOT.Modules
                 .WithImageUrl($"{search.PosterUrl}")
                 .WithTitle($"{search.Title} ({search.Year}) {search.Rating}%")
                 .WithUrl($"{search.Url}")
-                .AddField("Žánry", $"{String.Join(", ", search.Genres)}")
+                .AddField("Žánry", $"{string.Join(", ", search.Genres)}")
                 .Build();
-            await ReplyAsync(String.Empty, false, embed);
+            await this.ReplyAsync(string.Empty, false, embed);
         }
 
         [Command("imdb", RunMode = RunMode.Async)]
@@ -113,29 +124,44 @@ namespace LennyBOT.Modules
             var document = await context.OpenAsync(address);
             var cellSelector = "td.result_text";
             var cells = document.QuerySelectorAll(cellSelector).ToList();
-            string reply = String.Empty;
-            for (int i = 0; i < 4; i++)
+            var reply = string.Empty;
+            for (var i = 0; i < 4; i++)
             {
                 var title = cells[i].TextContent.Trim(' ');
                 var url = "https://www.imdb.com" + cells[i].InnerHtml.Split('"')[1].Split('?')[0];
 
                 // -------- rating
-                string rating = String.Empty;
+                var rating = string.Empty;
                 if (i == 0)
                 {
                     var document2 = await context.OpenAsync(url);
                     var sourceText = document2.Source.Text;
-                    string searchtext = "<span itemprop=\"ratingValue\">";
-                    rating = _service.Extract(sourceText, searchtext, "</span>");
-                    if (!Double.TryParse(rating.Replace('.', ','), out _)) { rating = "N/A"; }
-                    else { rating += "/10"; };
-                }
-                // -------- */
+                    var searchtext = "<span itemprop=\"ratingValue\">";
+                    rating = SearchService.Extract(sourceText, searchtext, "</span>");
+                    if (!double.TryParse(rating.Replace('.', ','), out _))
+                    {
+                        rating = "N/A";
+                    }
+                    else
+                    {
+                        rating += "/10";
+                    }
 
-                if (i == 0) { reply += $"{title} *Rating: {rating}*\n{url}\n\n**Other results:**\n"; }
-                else { reply += $"{title}\n<{url}>\n"; }
+                    ;
+                }
+
+                // -------- */
+                if (i == 0)
+                {
+                    reply += $"{title} *Rating: {rating}*\n{url}\n\n**Other results:**\n";
+                }
+                else
+                {
+                    reply += $"{title}\n<{url}>\n";
+                }
             }
-            await ReplyAsync(reply);
+
+            await this.ReplyAsync(reply);
         }
 
         [Command("steam game", RunMode = RunMode.Async)]
@@ -147,14 +173,15 @@ namespace LennyBOT.Modules
         {
             if (Game == null)
             {
-                await Context.Channel.SendMessageAsync("`Enter a game name`");
+                await this.Context.Channel.SendMessageAsync("`Enter a game name`");
                 return;
             }
+
             try
             {
-                string searchQuery = Game;
-                List<Listing> results = Query.Search(searchQuery);
-                string cost = "";
+                var searchQuery = Game;
+                var results = Query.Search(searchQuery);
+                var cost = string.Empty;
                 if (results[0].SaleType.ToString() == "FreeToPlay")
                 {
                     cost = "Free!";
@@ -163,12 +190,13 @@ namespace LennyBOT.Modules
                 {
                     cost = $"${results[0].PriceUSD}";
                 }
-                await Context.Channel.SendMessageAsync(results[0].StoreLink);
+
+                await this.Context.Channel.SendMessageAsync(results[0].StoreLink);
 
             }
             catch
             {
-                await Context.Channel.SendMessageAsync("`Could not find game`");
+                await this.Context.Channel.SendMessageAsync("`Could not find game`");
             }
 
         }
@@ -182,104 +210,127 @@ namespace LennyBOT.Modules
         {
             if (user == null)
             {
-                await ReplyAsync("`You did not specify user`\nHow to get steam user? http://i.imgur.com/pM9dff5.png");
+                await this.ReplyAsync("`You did not specify user`\nHow to get steam user? http://i.imgur.com/pM9dff5.png");
                 return;
             }
 
             try
             {
                 SteamIdentity SteamUser = null;
-                SteamWebAPI.SetGlobalKey(Config.Configuration.Load().SteamAPIKey);
+                SteamWebAPI.SetGlobalKey(Config.Configuration.Load().SteamApiKey);
                 SteamUser = SteamWebAPI.General().ISteamUser().ResolveVanityURL(user).GetResponse().Data.Identity;
                 if (SteamUser == null)
                 {
-                    await ReplyAsync("`Could not find steam user`");
+                    await this.ReplyAsync("`Could not find steam user`");
                     return;
                 }
-                //var Games = SteamWebAPI.General().IPlayerService().GetOwnedGames(SteamUser).GetResponse();
+
+                // var Games = SteamWebAPI.General().IPlayerService().GetOwnedGames(SteamUser).GetResponse();
                 var Badges = SteamWebAPI.General().IPlayerService().GetBadges(SteamUser).GetResponse();
                 var LastPlayed = SteamWebAPI.General().IPlayerService().GetRecentlyPlayedGames(SteamUser).GetResponse();
-                var Friends = SteamWebAPI.General().ISteamUser().GetFriendList(SteamUser, RelationshipType.Friend).GetResponse();
+                var Friends = SteamWebAPI.General().ISteamUser().GetFriendList(SteamUser, RelationshipType.Friend)
+                    .GetResponse();
 
-                //------------- avatarUrl + nickname
+                // ------------- avatarUrl + nickname
                 var config = AngleSharp.Configuration.Default.WithDefaultLoader();
                 var address = "https://steamcommunity.com/id/" + user;
                 var document = await BrowsingContext.New(config).OpenAsync(address);
                 var sourceText = document.Source.Text;
-                var avatarUrl = _service.Extract(sourceText, "<div class=\"playerAvatarAutoSizeInner\"><img src=\"", "\"");
-                var nickname = _service.Extract(sourceText, "<span class=\"actual_persona_name\">", "</span>");
-                //-------------
+                var avatarUrl = SearchService.Extract(
+                    sourceText,
+                    "<div class=\"playerAvatarAutoSizeInner\"><img src=\"",
+                    "\"");
+                var nickname = SearchService.Extract(sourceText, "<span class=\"actual_persona_name\">", "</span>");
 
-                string Game1 = "";
-                string Game2 = "";
-                string Game3 = "";
-                string Game4 = "";
-                string Game5 = "";
-                string GamePlay1 = "";
-                string GamePlay2 = "";
-                string GamePlay3 = "";
-                string GamePlay4 = "";
-                string GamePlay5 = "";
+                // -------------
+                var Game1 = string.Empty;
+                var Game2 = string.Empty;
+                var Game3 = string.Empty;
+                var Game4 = string.Empty;
+                var Game5 = string.Empty;
+                var GamePlay1 = string.Empty;
+                var GamePlay2 = string.Empty;
+                var GamePlay3 = string.Empty;
+                var GamePlay4 = string.Empty;
+                var GamePlay5 = string.Empty;
                 if (LastPlayed.Data.TotalCount > 0)
                 {
                     Game1 = LastPlayed.Data.Games[0].Name + "  ";
-                    GamePlay1 = ((int)Math.Ceiling(LastPlayed.Data.Games[0].PlayTimeTotal.TotalHours)).ToString() + " hours";
+                    GamePlay1 = ((int)Math.Ceiling(LastPlayed.Data.Games[0].PlayTimeTotal.TotalHours)).ToString()
+                                + " hours";
                 }
+
                 if (LastPlayed.Data.TotalCount > 1)
                 {
                     Game2 = LastPlayed.Data.Games[1].Name + "  ";
-                    GamePlay2 = ((int)Math.Ceiling(LastPlayed.Data.Games[1].PlayTimeTotal.TotalHours)).ToString() + " hours";
+                    GamePlay2 = ((int)Math.Ceiling(LastPlayed.Data.Games[1].PlayTimeTotal.TotalHours)).ToString()
+                                + " hours";
                 }
+
                 if (LastPlayed.Data.TotalCount > 2)
                 {
                     Game3 = LastPlayed.Data.Games[2].Name + "  ";
-                    GamePlay3 = ((int)Math.Ceiling(LastPlayed.Data.Games[2].PlayTimeTotal.TotalHours)).ToString() + " hours";
+                    GamePlay3 = ((int)Math.Ceiling(LastPlayed.Data.Games[2].PlayTimeTotal.TotalHours)).ToString()
+                                + " hours";
                 }
+
                 if (LastPlayed.Data.TotalCount > 3)
                 {
                     Game4 = LastPlayed.Data.Games[3].Name + "  ";
-                    GamePlay4 = ((int)Math.Ceiling(LastPlayed.Data.Games[3].PlayTimeTotal.TotalHours)).ToString() + " hours";
+                    GamePlay4 = ((int)Math.Ceiling(LastPlayed.Data.Games[3].PlayTimeTotal.TotalHours)).ToString()
+                                + " hours";
                 }
+
                 if (LastPlayed.Data.TotalCount > 4)
                 {
                     Game5 = LastPlayed.Data.Games[4].Name + "  ";
-                    GamePlay5 = ((int)Math.Ceiling(LastPlayed.Data.Games[4].PlayTimeTotal.TotalHours)).ToString() + " hours";
+                    GamePlay5 = ((int)Math.Ceiling(LastPlayed.Data.Games[4].PlayTimeTotal.TotalHours)).ToString()
+                                + " hours";
                 }
 
                 var embed = new EmbedBuilder();
                 {
-                    embed.WithAuthor(author =>
-                    {
-                        author.WithName("Steam");
-                        author.WithIconUrl("https://images.techhive.com/images/article/2016/11/steam_logo2-100691182-orig.jpg");
-                        author.WithUrl("https://steamcommunity.com/");
-                    });
+                    embed.WithAuthor(
+                        author =>
+                            {
+                                author.WithName("Steam");
+                                author.WithIconUrl(
+                                    "https://images.techhive.com/images/article/2016/11/steam_logo2-100691182-orig.jpg");
+                                author.WithUrl("https://steamcommunity.com/");
+                            });
                     embed.WithTitle($"{nickname} | Lvl {Badges.Data.PlayerLevel} | Xp {Badges.Data.PlayerXP}");
                     embed.WithUrl("https://steamcommunity.com/id/" + user);
                     embed.WithThumbnailUrl(avatarUrl);
                 }
-                embed.AddField(x =>
-                {
-                    x.Name = "Info"; x.Value = $"```json\nFriends: {Friends.Data.Friends.Count}\n" + /*$"<Games {Games.Data.GameCount}>" + Environment.NewLine +*/ $" Badges: {Badges.Data.Badges.Count}```";
-                    x.IsInline = false;
-                });
-                embed.AddField(x =>
-                {
-                    x.Name = "Game";
-                    x.Value = $"{Game1}\n{Game2}\n{Game3}\n{Game4}\n{Game5}";
-                    x.IsInline = true;
-                });
-                embed.AddField(x =>
-                {
-                    x.Name = "Playtime";
-                    x.Value = $"{GamePlay1}\n{GamePlay2}\n{GamePlay3}\n{GamePlay4}\n{GamePlay5}";
-                    x.IsInline = true;
-                });
-                await ReplyAsync("", false, embed);
+
+                embed.AddField(
+                    x =>
+                        {
+                            x.Name = "Info";
+                            x.Value = $"```json\nFriends: {Friends.Data.Friends.Count}\n"
+                                      + /*$"<Games {Games.Data.GameCount}>" + Environment.NewLine +*/
+                                      $" Badges: {Badges.Data.Badges.Count}```";
+                            x.IsInline = false;
+                        });
+                embed.AddField(
+                    x =>
+                        {
+                            x.Name = "Game";
+                            x.Value = $"{Game1}\n{Game2}\n{Game3}\n{Game4}\n{Game5}";
+                            x.IsInline = true;
+                        });
+                embed.AddField(
+                    x =>
+                        {
+                            x.Name = "Playtime";
+                            x.Value = $"{GamePlay1}\n{GamePlay2}\n{GamePlay3}\n{GamePlay4}\n{GamePlay5}";
+                            x.IsInline = true;
+                        });
+                await ReplyAsync(string.Empty, false, embed);
             }
             catch
             {
-                await ReplyAsync("`Something went wrong!`");
+                await this.ReplyAsync("`Something went wrong!`");
             }
         }
 
@@ -289,18 +340,18 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task Inventory(string steamID64)
         {
-            var user = Context.Message.Author as SocketGuildUser;
+            var user = this.Context.Message.Author as SocketGuildUser;
             string messageContent;
 
             using (var webClient = new HttpClient())
             {
                 var result = await webClient.GetAsync($"http://csgobackpack.net/api/GetInventoryValue/?id={steamID64}");
-                string jsonContent = await result.Content.ReadAsStringAsync();
+                var jsonContent = await result.Content.ReadAsStringAsync();
                 var inventoryData = JsonConvert.DeserializeObject<Inventory>(jsonContent);
                 messageContent = inventoryData.Success ?
                   $"**Player:** {steamID64}{Environment.NewLine}**Inventory value:** {inventoryData.Value} {inventoryData.Currency}{Environment.NewLine}**Items:** {inventoryData.Items}" :
                   $"**Error** {Environment.NewLine}Are you sure you entered a correct steamID?{Environment.NewLine}You can get your steamID here: <http://steamidfinder.com/> and use *steamID64*";
-                await ReplyAsync(messageContent);
+                await this.ReplyAsync(messageContent);
             }
         }
 
@@ -310,34 +361,35 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task Osu(string user = null)
         {
-            var osuAPIKey = Config.Configuration.Load().OsuAPIKey;
+            var osuAPIKey = Config.Configuration.Load().OsuApiKey;
             try
             {
                 OsuData osuData;
                 using (var webClient = new HttpClient())
                 {
                     var result = await webClient.GetAsync($"https://osu.ppy.sh/api/get_user?k={osuAPIKey}&u={user}");
-                    string jsonContent = await result.Content.ReadAsStringAsync();
+                    var jsonContent = await result.Content.ReadAsStringAsync();
                     var osuDatas = JsonConvert.DeserializeObject<List<OsuData>>(jsonContent);
                     osuData = osuDatas.FirstOrDefault();
                 }
-                var acc = Double.Parse(osuData.Accuracy.Replace('.', ','));
+
+                var acc = double.Parse(osuData.Accuracy.Replace('.', ','));
                 var embed = new EmbedBuilder()
                     .WithTitle($"{osuData.Username} | (Level: {osuData.Level.Split('.').First()})")
                     .WithThumbnailUrl("https://s.ppy.sh/images/head-logo.png")
                     .WithUrl($"https://osu.ppy.sh/u/{osuData.Username}")
                     .WithColor(new Color(255, 105, 180))
                     .WithCurrentTimestamp()
-                    .AddInlineField("Stats", $"```json\nPlayed songs: {osuData.Playcount}\n    Accuracy: {String.Format("{0:F2}", acc).Replace(',', '.')}```")
+                    .AddInlineField("Stats", $"```json\nPlayed songs: {osuData.Playcount}\n    Accuracy: {string.Format("{0:F2}", acc).Replace(',', '.')}```")
                     .AddInlineField("Score", $"```json\n Total: {osuData.Total_score}\nRanked: {osuData.Ranked_score}```")
                     .AddInlineField("Performance points", $"```json\nPerformance points: {osuData.Pp_raw}\nWorldwide rank: {osuData.Pp_rank}\nCountry rank: {osuData.Pp_country_rank} ({osuData.Country})```")
                     .AddInlineField("Rank", $"```json\nSS: {osuData.Count_rank_ss}\n S: {osuData.Count_rank_s}\n A: {osuData.Count_rank_a}```")
                     .Build();
-                await ReplyAsync("", false, embed);
+                await this.ReplyAsync(string.Empty, false, embed);
             }
             catch (Exception)
             {
-                await ReplyAsync($"`Cannot find osu user`");
+                await this.ReplyAsync($"`Cannot find osu user`");
             }
         }
     }
