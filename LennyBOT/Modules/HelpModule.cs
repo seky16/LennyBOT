@@ -1,27 +1,28 @@
 // ReSharper disable StyleCop.SA1600
-using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-
-using Discord;
-using Discord.Commands;
-
-using LennyBOT.Config;
-
+// ReSharper disable UnusedMember.Global
 namespace LennyBOT.Modules
 {
+    using System;
+    using System.Diagnostics;
+    using System.Globalization;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Threading.Tasks;
+
+    using Discord;
+    using Discord.Commands;
+
+    using LennyBOT.Config;
+
     [Name("Help")]
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
-        private CommandService _service;
+        private readonly CommandService service;
 
         public HelpModule(CommandService service)
         {
             // Create a constructor for the commandservice dependency
-            this._service = service;
+            this.service = service;
         }
 
         /*
@@ -36,7 +37,7 @@ namespace LennyBOT.Modules
                         Color = new Color(114, 137, 218),
                         Description = "These are the commands you can use:"
                     };
-        
+
                     foreach (var module in _service.Modules)
                     {
                         string description = null;
@@ -46,7 +47,7 @@ namespace LennyBOT.Modules
                             if (result.IsSuccess)
                                 description += $"{prefix}{cmd.Aliases.First()}\n";
                         }
-        
+
                         if (!string.IsNullOrWhiteSpace(description))
                         {
                             builder.AddField(x =>
@@ -60,21 +61,16 @@ namespace LennyBOT.Modules
                     await ReplyAsync("", false, builder.Build());
                 }
                 */
-        private static string GetUptime() =>
-            (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss");
-
-        private static string GetHeapSize() => Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2).ToString();
 
         [Command("info")]
         [Alias("about")]
         [Remarks("Get info about bot")]
         [MinPermissions(AccessLevel.User)]
-        public async Task InfoCmd()
+        public async Task InfoCmdAsync()
         {
-            var app = await this.Context.Client.GetApplicationInfoAsync();
+            var app = await this.Context.Client.GetApplicationInfoAsync().ConfigureAwait(false);
 
             await this.ReplyAsync(
-                // $"Lenny is bot.\n\n" +
                 $"{Format.Bold("Info")}\n" + $"- Author: {app.Owner} ({app.Owner.Id})\n"
                 + $"- Library: Discord.Net ({DiscordConfig.Version})\n"
                 + $"- Runtime: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture} "
@@ -82,45 +78,46 @@ namespace LennyBOT.Modules
                 + $"- Uptime: {GetUptime()}\n\n" + $"{Format.Bold("Stats")}\n" + $"- Heap Size: {GetHeapSize()}MiB\n"
                 + $"- Guilds: {this.Context.Client.Guilds.Count}\n"
                 + $"- Channels: {this.Context.Client.Guilds.Sum(g => g.Channels.Count)}\n"
-                + $"- Users: {this.Context.Client.Guilds.Sum(g => g.Users.Count)}\n");
+                + $"- Users: {this.Context.Client.Guilds.Sum(g => g.Users.Count)}\n")
+                .ConfigureAwait(false);
         }
 
         [Command("debug")]
         [Remarks("Get ids of guild, channel, user")]
         [MinPermissions(AccessLevel.User)]
-        public async Task DebugCmd()
+        public Task DebugCmdAsync()
         {
             var serverId = (this.Context.Channel as IGuildChannel)?.GuildId.ToString() ?? "n/a";
             var response =
                 $"```Guild ID:   {serverId}\nChannel ID: {this.Context.Channel.Id}\nUser ID:    {this.Context.User.Id}```";
-            await this.ReplyAsync(response);
+            return this.ReplyAsync(response);
         }
 
         [Command("help")]
         [Remarks("Get help about command")]
         [MinPermissions(AccessLevel.User)]
-        public async Task HelpCmd(string command = null)
+        public async Task HelpCmdAsync(string command = null)
         {
             command = command ?? "dasdkajdnjkasdkads@&$²`124578";
             if (command == "dasdkajdnjkasdkads@&$²`124578")
             {
                 var prefix = Configuration.Load().Prefix.ToString();
-                var builder = new EmbedBuilder()
+                var builder = new EmbedBuilder
                                   {
                                       Color = new Color(114, 137, 218),
                                       Description = "These are the commands you can use:"
                                   };
 
-                foreach (var module in this._service.Modules)
+                foreach (var module in this.service.Modules)
                 {
                     string description = null;
                     foreach (var cmd in module.Commands)
                     {
-                        var result = await cmd.CheckPreconditionsAsync(this.Context);
+                        var result = await cmd.CheckPreconditionsAsync(this.Context).ConfigureAwait(false);
                         if (result.IsSuccess)
-
-                            // description += $"{prefix}{cmd.Aliases.First()}\n";
+                        {
                             description += prefix + string.Join($", {prefix}", cmd.Aliases) + "\n";
+                        }
                     }
 
                     if (!string.IsNullOrWhiteSpace(description))
@@ -135,20 +132,19 @@ namespace LennyBOT.Modules
                     }
                 }
 
-                await this.ReplyAsync(string.Empty, false, builder.Build());
+                await this.ReplyAsync(string.Empty, false, builder.Build()).ConfigureAwait(false);
             }
             else
             {
-                var result = this._service.Search(this.Context, command);
+                var result = this.service.Search(this.Context, command);
 
                 if (!result.IsSuccess)
                 {
-                    await this.ReplyAsync($"Sorry, I couldn't find a command like **{command}**.");
+                    await this.ReplyAsync($"Sorry, I couldn't find a command like **{command}**.").ConfigureAwait(false);
                     return;
                 }
 
-                var prefix = Configuration.Load().Prefix.ToString();
-                var builder = new EmbedBuilder()
+                var builder = new EmbedBuilder
                                   {
                                       Color = new Color(114, 137, 218),
                                       Description = $"Here are some commands like **{command}**"
@@ -163,14 +159,17 @@ namespace LennyBOT.Modules
                             {
                                 x.Name = string.Join(", ", cmd.Aliases);
                                 x.Value = $"Parameters: {string.Join(", ", cmd.Parameters.Select(p => p.Name))}\n"
-                                          + $"Description: {cmd.Remarks}\n" /*+
-                              $"Can use: "/*{ cmd. Parameters.Select(p => p.Name) }/ +"and higher"*/;
+                                          + $"Description: {cmd.Remarks}\n";
                                 x.IsInline = false;
                             });
                 }
 
-                await this.ReplyAsync(string.Empty, false, builder.Build());
+                await this.ReplyAsync(string.Empty, false, builder.Build()).ConfigureAwait(false);
             }
         }
+
+        private static string GetUptime() => (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss");
+
+        private static string GetHeapSize() => Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2).ToString(CultureInfo.InvariantCulture);
     }
 }
