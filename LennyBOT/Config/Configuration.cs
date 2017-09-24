@@ -1,4 +1,5 @@
-﻿namespace LennyBOT.Config
+﻿// ReSharper disable StyleCop.SA1600
+namespace LennyBOT.Config
 {
     using System;
     using System.Collections.Generic;
@@ -31,7 +32,7 @@
 
         /// <summary> Gets the path of your bot's configuration file. </summary>
         [JsonIgnore]
-        private static string FileName { get; } = "Files\\config.json";
+        private static string FileName { get; } = "Files\\test.json";
 
         /// <summary>
         /// Ensures the config file exists, if not it creates it.

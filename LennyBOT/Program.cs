@@ -115,8 +115,7 @@ namespace LennyBOT
             this.map.AddSingleton(new ShekelsService());
             this.map.AddSingleton(new RandomService());
             this.map.AddSingleton(new SearchService());
-
-            // _map.AddSingleton(new LiteDatabase("files/bot.db"));
+            this.map.AddSingleton(new TagService());
 
             // When all your required services are in the collection, build the container.
             // Tip: There's an overload taking in a 'validateScopes' bool to make sure

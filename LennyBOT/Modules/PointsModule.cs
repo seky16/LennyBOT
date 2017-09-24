@@ -1,4 +1,5 @@
-﻿/*
+﻿// ReSharper disable StyleCop.SA1600
+/*
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;

@@ -1,5 +1,5 @@
 ﻿// ReSharper disable StyleCop.SA1600
-namespace LennyBOT.Services
+namespace LennyBOT.Models
 {
     using Discord;
 

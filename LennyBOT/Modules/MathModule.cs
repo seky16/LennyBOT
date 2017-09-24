@@ -37,7 +37,7 @@ namespace LennyBOT.Modules
             }
             catch (Exception)
             {
-                await this.ReplyAsync($"```fix\nSomething went wrong```").ConfigureAwait(false);
+                await this.ReplyAsync("```fix\nSomething went wrong```").ConfigureAwait(false);
             }
         }
     }
