@@ -12,6 +12,8 @@ namespace LennyBOT.Services
     using Discord.Commands;
     using Discord.WebSocket;
 
+    using LennyBOT.Models;
+
     public class ShekelsService
     {
         private readonly List<Player> players = new List<Player>();

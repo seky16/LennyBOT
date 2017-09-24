@@ -1,47 +1,82 @@
 ﻿// ReSharper disable StyleCop.SA1600
+// ReSharper disable UnusedMember.Global
 namespace LennyBOT.Modules
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
+    using System.Linq;
     using System.Threading.Tasks;
 
     using Discord;
     using Discord.Addons.EmojiTools;
     using Discord.Commands;
 
+    using LennyBOT.Config;
     using LennyBOT.Services;
 
-    using LiteDB;
-
+    [Group("tag")]
     public class TagModule : ModuleBase<SocketCommandContext>
     {
-        private static readonly Emoji TagNotFound = EmojiExtensions.FromText("mag_right");
+        private static readonly Emoji TagNotFound = EmojiExtensions.FromText("question");
         private static readonly Emoji Pass = EmojiExtensions.FromText("ok_hand");
-        private static readonly Emoji Fail = EmojiExtensions.FromText("octagonal_sign");
+        private static readonly Emoji Fail = EmojiExtensions.FromText("no_entry");
         private static readonly Emoji Removed = EmojiExtensions.FromText("put_litter_in_its_place");
-
-        protected TagModule(TagService service)
+        
+        [Command]
+        public Task TagAsync()
         {
-            this.Service = service;
+            return this.ReplyAsync(TagService.GetListOfTags());
         }
 
-        private TagService Service { get; set; }
-
-        [Command("tag")]
+        [Command]
         public Task TagAsync([Remainder] string name)
         {
-            var tag = this.Service.GetTag(name);
-            return tag == null ? this.ReplyAsync("Tag not found!") : this.ReplyAsync(string.Empty, false, tag.Embed);
+            var tag = TagService.GetTag(name);
+            return tag == null ? this.ReactAsync(TagNotFound) : this.ReplyAsync($"**{tag.Name}:** {tag.Content}");
         }
 
-        [Command("tag create")]
+        [Command("create"), Priority(100)]
         public Task CreateTagAsync(string name, [Remainder] string content)
         {
-            this.Service.CreateTag(name, content, this.Context.User);
+            if (TagService.GetTag(name) != null)
+            {
+                return this.ReactAsync(Fail);
+            }
+
+            TagService.CreateTag(name, content, this.Context.User.Id);
             return this.ReactAsync(Pass);
         }
 
+        [Command("remove"), Priority(99)]
+        public Task RemoveTagAsync(string name)
+        {
+            var tag = TagService.GetTag(name);
+            if (tag == null)
+            {
+                return this.ReactAsync(Fail);
+            }
+
+            if (tag.OwnerId != this.Context.User.Id || !Configuration.Load().Owners.Contains(this.Context.User.Id))
+            {
+                return this.ReactAsync(Fail);
+            }
+
+            var success = TagService.RemoveTag(tag);
+            return this.ReactAsync(success ? Removed : Fail);
+        }
+
+        [Command("info"), Priority(98)]
+        public Task TagInfoAsync(string name)
+        {
+            var tag = TagService.GetTag(name);
+            if (tag == null)
+            {
+                return this.ReactAsync(Fail);
+            }
+
+            var output = $"Name: {tag.Name}\n"
+                       + $"Owner: {this.Context.Client.GetUser(tag.OwnerId)}\n"
+                       + $"Created at: {tag.CreatedAt}\n";
+            return this.ReplyAsync(output);
+        }
 
         private Task ReactAsync(IEmote emoji)
             => this.Context.Message.AddReactionAsync(emoji);

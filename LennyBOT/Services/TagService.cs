@@ -1,30 +1,60 @@
 ﻿// ReSharper disable StyleCop.SA1600
 namespace LennyBOT.Services
 {
-    using Discord;
+    using System.IO;
+    using System.Linq;
 
-    using LiteDB;
+    using LennyBOT.Models;
+
+    using Newtonsoft.Json;
 
     public class TagService
     {
-        public TagService(LiteDatabase database)
+    public static void CreateTag(string name, string content, ulong ownerId)
         {
-            this.Database = database;
+            var createdTag = new Tag(name, content, ownerId);
+            var jsonString = File.ReadAllText("Files\\tags.json");
+            var arr = JsonConvert.DeserializeObject<Tag[]>(jsonString);
+            var list = arr.ToList();
+            list.Add(createdTag);
+            arr = list.ToArray();
+            jsonString = JsonConvert.SerializeObject(arr);
+            File.WriteAllText("Files\\tags.json", jsonString);
         }
 
-        private LiteDatabase Database { get; set; }
-
-        public void CreateTag(string name, string content, IUser owner)
+        public static Tag GetTag(string name)
         {
-            var createdTag = new Tag(name, content, owner);
-            var tags = this.Database.GetCollection<Tag>("tags");
-            tags.Insert(createdTag);
+            var jsonString = File.ReadAllText("Files\\tags.json");
+            var arr = JsonConvert.DeserializeObject<Tag[]>(jsonString);
+            var tag = arr.FirstOrDefault(t => t.Name == name);
+            return tag;
         }
 
-        public Tag GetTag(string name)
+        public static bool RemoveTag(Tag tagToRemove)
         {
-            var tags = this.Database.GetCollection<Tag>("tags");
-            return tags.FindOne(t => t.Name == name);
+            var jsonString = File.ReadAllText("Files\\tags.json");
+            var arr = JsonConvert.DeserializeObject<Tag[]>(jsonString);
+            var list = arr.ToList();
+            var success = list.Remove(list.Find(t => t.Name == tagToRemove.Name));
+            if (!success)
+            {
+                return false;
+            }
+
+            arr = list.ToArray();
+            jsonString = JsonConvert.SerializeObject(arr);
+            File.WriteAllText("Files\\tags.json", jsonString);
+            return true;
+        }
+
+        public static string GetListOfTags()
+        {
+            var jsonString = File.ReadAllText("Files\\tags.json");
+            var arr = JsonConvert.DeserializeObject<Tag[]>(jsonString);
+            var list = arr.ToList();
+            var names = list.Select(tag => tag.Name).ToList();
+            var output = string.Join(", ", names);
+            return output;
         }
     }
 }

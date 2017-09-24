@@ -1,4 +1,5 @@
-﻿/*using System;
+﻿// ReSharper disable StyleCop.SA1600
+/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
