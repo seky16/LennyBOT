@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RuntimeIdentifiers>win10-64;ubuntu.16.04-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +15,12 @@
     <PackageReference Include="Urbandictionary" Version="1.5.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Files\" />
+    <Folder Include="Modules\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
   <ItemGroup>
     <None Update="Files\kevin.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
