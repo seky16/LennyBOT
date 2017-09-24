@@ -12,6 +12,8 @@ namespace LennyBOT
     using LennyBOT.Config;
     using LennyBOT.Services;
 
+    using LiteDB;
+
     using Microsoft.Extensions.DependencyInjection;
 
     internal class Program
@@ -116,7 +118,9 @@ namespace LennyBOT
             this.map.AddSingleton(new RandomService());
             this.map.AddSingleton(new SearchService());
 
-            // _map.AddSingleton(new LiteDatabase("files/bot.db"));
+            var db = new LiteDatabase("files/tags.db");
+            this.map.AddSingleton(new TagService(db));
+            this.map.AddSingleton(db);
 
             // When all your required services are in the collection, build the container.
             // Tip: There's an overload taking in a 'validateScopes' bool to make sure

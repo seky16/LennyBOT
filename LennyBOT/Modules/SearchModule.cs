@@ -88,7 +88,6 @@ namespace LennyBOT.Modules
             return this.ReplyAsync("https://www.youtube.com/watch?" + Regex.Split(Regex.Split(html, @"\/watch\?")[1], "\"")[0]);
         }
 
-        // todo: implement api
         [Command("csfd", RunMode = RunMode.Async)]
         [Remarks("Look up a movie on ČSFD")]
         [MinPermissions(AccessLevel.User)]
