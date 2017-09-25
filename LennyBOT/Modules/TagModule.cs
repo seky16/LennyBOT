@@ -2,6 +2,7 @@
 // ReSharper disable UnusedMember.Global
 namespace LennyBOT.Modules
 {
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -19,7 +20,9 @@ namespace LennyBOT.Modules
         private static readonly Emoji Pass = EmojiExtensions.FromText("ok_hand");
         private static readonly Emoji Fail = EmojiExtensions.FromText("no_entry");
         private static readonly Emoji Removed = EmojiExtensions.FromText("put_litter_in_its_place");
-        
+
+        private static readonly List<string> Reserved = new List<string> { "create", "remove", "delete", "info", "owner" };
+
         [Command]
         public Task TagAsync()
         {
@@ -41,11 +44,17 @@ namespace LennyBOT.Modules
                 return this.ReactAsync(Fail);
             }
 
+            if (Reserved.Contains(name))
+            {
+                return this.ReactAsync(Fail);
+            }
+
             TagService.CreateTag(name, content, this.Context.User.Id);
             return this.ReactAsync(Pass);
         }
 
         [Command("remove"), Priority(99)]
+        [Alias("delete")]
         public Task RemoveTagAsync(string name)
         {
             var tag = TagService.GetTag(name);
@@ -64,6 +73,7 @@ namespace LennyBOT.Modules
         }
 
         [Command("info"), Priority(98)]
+        [Alias("owner")]
         public Task TagInfoAsync(string name)
         {
             var tag = TagService.GetTag(name);

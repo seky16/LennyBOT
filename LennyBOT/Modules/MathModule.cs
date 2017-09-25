@@ -4,9 +4,14 @@ namespace LennyBOT.Modules
 {
     using System;
     using System.Data;
+    using System.Globalization;
     using System.Threading.Tasks;
 
+    using Discord;
     using Discord.Commands;
+    using Discord.WebSocket;
+
+    using FixerSharp;
 
     [Name("Math")]
     public class MathModule : ModuleBase<SocketCommandContext>
@@ -39,6 +44,29 @@ namespace LennyBOT.Modules
             {
                 await this.ReplyAsync("```fix\nSomething went wrong```").ConfigureAwait(false);
             }
+        }
+
+        [Command("convert", RunMode = RunMode.Async), Alias("conv")]
+        public async Task ConvertAsync(string amount, string from, string to)
+        {
+            amount = amount.Replace(',', '.');
+            // ReSharper disable StyleCop.SA1126
+            if (!double.TryParse(amount, out var amountD))
+            {
+                await this.ReplyAsync("You entered wrong amount").ConfigureAwait(false);
+                return;
+            }
+
+            var author = this.Context.Message.Author as SocketGuildUser;
+            var nick = author?.Nickname ?? this.Context.Message.Author.Username;
+            var result = await Fixer.ConvertAsync(from, to, amountD).ConfigureAwait(false);
+            result = Math.Round(result, 2);
+            var builder = new EmbedBuilder()
+                .WithColor(Color.DarkGreen)
+                .WithAuthor(new EmbedAuthorBuilder().WithName(nick ?? string.Empty).WithIconUrl(author?.GetAvatarUrl() ?? string.Empty))
+                .WithCurrentTimestamp()
+                .WithDescription($"{amountD.ToString(CultureInfo.InvariantCulture)} {from.ToUpper()} = **{result.ToString(CultureInfo.InvariantCulture)} {to.ToUpper()}**");
+            await this.ReplyAsync(string.Empty, false, builder.Build()).ConfigureAwait(false);
         }
     }
 }
