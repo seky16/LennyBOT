@@ -1,6 +1,6 @@
 ﻿// ReSharper disable StyleCop.SA1600
 // ReSharper disable UnusedMember.Global
-namespace LennyBOT.Modules
+/*namespace LennyBOT.Modules
 {
     using System.Threading.Tasks;
 
@@ -40,4 +40,4 @@ namespace LennyBOT.Modules
             // await ReplyAsync($"id: {p.Id}; \nshekels: {p.Shekels};");
         }
     }
-}
+}*/

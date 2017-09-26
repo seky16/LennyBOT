@@ -15,7 +15,7 @@ namespace LennyBOT.Services
         public FactService()
         {
             this.randomFacts = new List<string>();
-            var sr = File.OpenText(AppDomain.CurrentDomain.BaseDirectory + "/files/randFacts.txt");
+            var sr = File.OpenText(AppDomain.CurrentDomain.BaseDirectory + "Files/randFacts.txt");
             string s;
             while ((s = sr.ReadLine()) != null)
             {

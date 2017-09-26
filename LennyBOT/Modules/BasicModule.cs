@@ -25,7 +25,7 @@ namespace LennyBOT.Modules
         [Command("nick")]
         [Remarks("Make the bot change your nick")]
         [MinPermissions(AccessLevel.User)]
-        public async Task NickCmdAsync([Remainder]string name)
+        public async Task NickCmdAsync([Remainder] string name)
         {
             if (this.Context.User is SocketGuildUser user)
             {
@@ -35,10 +35,11 @@ namespace LennyBOT.Modules
         }
 
         [Command("kevin")]
+        [Remarks("Fuck Kevin")]
         [MinPermissions(AccessLevel.User)]
         public Task KevCmdAsync()
         {
-            return this.Context.Channel.SendFileAsync("files/kevin.jpg");
+            return this.Context.Channel.SendFileAsync("Files/kevin.jpg");
         }
 
         [Command("fact")]
@@ -80,13 +81,14 @@ namespace LennyBOT.Modules
             var nick = (user as IGuildUser)?.Nickname ?? user.Username;
 
             // if (String.IsNullOrWhiteSpace(nick)) { nick = user.Username; }
-            return this.ReplyAsync($"```\nusername: {user}\nnickname: {nick}\n      id: {user.Id}\n created: {user.CreatedAt}\n  joined: {(user as IGuildUser)?.JoinedAt}\n  status: {user.Status}\n playing: {g}\n   roles: {r}\n```");
+            return this.ReplyAsync(
+                $"```\nusername: {user}\nnickname: {nick}\n      id: {user.Id}\n created: {user.CreatedAt}\n  joined: {(user as IGuildUser)?.JoinedAt}\n  status: {user.Status}\n playing: {g}\n   roles: {r}\n```");
 
             // \n avatar: {user.GetAvatarUrl()}");
         }
 
-        [Command("quote", RunMode = RunMode.Async), Alias("q")]
-        [Remarks("quote message")]
+        [Command("quote"), Alias("q")]
+        [Remarks("Quote message by id")]
         [MinPermissions(AccessLevel.User)]
         public async Task QuoteCmdAsync(ulong id)
         {
@@ -106,32 +108,55 @@ namespace LennyBOT.Modules
                 }
             }
 
-            // msg = await Context.Channel.GetMessageAsync(id);
+            var attachmentUrl = string.Empty;
             if (msg == null)
             {
                 await this.ReplyAsync($"Could not find message with id {id} in this guild.").ConfigureAwait(false);
+                return;
             }
-            else if (msg.Embeds.Count != 0)
+
+            if (msg.Embeds.Count != 0)
             {
-                await this.ReplyAsync("You cannot quote embed message. Coming soon™.").ConfigureAwait(false);
+                var embed = msg.Embeds.FirstOrDefault() as Embed;
+                await this.ReplyAsync(msg.Content, false, embed).ConfigureAwait(false);
+                return;
             }
-            else if (msg.Attachments.Count != 0)
+
+            if (msg.Attachments.Count != 0)
             {
-                await this.ReplyAsync("You cannot quote message with attachment. Coming soon™.").ConfigureAwait(false);
+                attachmentUrl = msg.Attachments.FirstOrDefault()?.Url;
             }
-            else
-            {
-                var author = msg.Author as SocketGuildUser;
-                var nick = author?.Nickname ?? msg.Author.Username;
-                var color = author?.Roles.OrderByDescending(x => x.Position).FirstOrDefault()?.Color ?? Color.Default;
-                var guildIcon = author?.Guild.IconUrl;
-                var embed = new EmbedBuilder().WithDescription(msg.Content).WithColor(color)
-                    .WithFooter(footer => { footer.WithText($"#{msg.Channel}").WithIconUrl(guildIcon); })
-                    .WithTimestamp(msg.Timestamp).WithAuthor(
-                        new EmbedAuthorBuilder().WithName(nick ?? string.Empty)
-                            .WithIconUrl(author?.GetAvatarUrl() ?? string.Empty)).Build();
-                await this.ReplyAsync(string.Empty, false, embed).ConfigureAwait(false);
-            }
+
+            var author = msg.Author as SocketGuildUser;
+            var nick = author?.Nickname ?? msg.Author.Username;
+            var color = author?.Roles.OrderByDescending(x => x.Position).FirstOrDefault()?.Color ?? Color.Default;
+            var guildIcon = author?.Guild.IconUrl ?? string.Empty;
+            var builder = new EmbedBuilder().WithDescription(msg.Content).WithColor(color)
+                .WithFooter(footer => { footer.WithText($"#{msg.Channel}").WithIconUrl(guildIcon); })
+                .WithTimestamp(msg.EditedTimestamp ?? msg.Timestamp).WithImageUrl(attachmentUrl).WithAuthor(
+                    new EmbedAuthorBuilder().WithName(nick ?? string.Empty)
+                        .WithIconUrl(author?.GetAvatarUrl() ?? string.Empty));
+            await this.ReplyAsync(string.Empty, false, builder.Build()).ConfigureAwait(false);
+        }
+
+        [Command("quote"), Alias("q")]
+        [Remarks("Quote custom message")]
+        [MinPermissions(AccessLevel.User)]
+        public Task QuoteCmdAsync(IUser user, [Remainder] string content)
+        {
+            var author = this.Context.Message.Author as IGuildUser;
+            var authorNick = author?.Nickname ?? this.Context.Message.Author.Username;
+            var guildUser = user as SocketGuildUser;
+            var nick = guildUser?.Nickname ?? user.Username;
+            var color = guildUser?.Roles.OrderByDescending(x => x.Position).FirstOrDefault()?.Color ?? Color.Default;
+            var guildIcon = guildUser?.Guild.IconUrl ?? string.Empty;
+            var builder = new EmbedBuilder().WithDescription(content).WithColor(color)
+                .WithFooter(footer => { footer.WithText($"quoted by {authorNick}").WithIconUrl(guildIcon); })
+                .WithCurrentTimestamp()
+                .WithAuthor(
+                    new EmbedAuthorBuilder().WithName(nick ?? string.Empty)
+                        .WithIconUrl(guildUser?.GetAvatarUrl() ?? string.Empty));
+            return this.ReplyAsync(string.Empty, false, builder.Build());
         }
     }
 }

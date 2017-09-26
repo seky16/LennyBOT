@@ -21,46 +21,8 @@ namespace LennyBOT.Modules
 
         public HelpModule(CommandService service)
         {
-            // Create a constructor for the commandservice dependency
             this.service = service;
         }
-
-        /*
-                [Command("help")]
-                [Remarks("Print available commands")]
-                [MinPermissions(AccessLevel.User)]
-                public async Task HelpAsync()
-                {
-                    string prefix = Configuration.Load().Prefix.ToString();
-                    var builder = new EmbedBuilder()
-                    {
-                        Color = new Color(114, 137, 218),
-                        Description = "These are the commands you can use:"
-                    };
-
-                    foreach (var module in _service.Modules)
-                    {
-                        string description = null;
-                        foreach (var cmd in module.Commands)
-                        {
-                            var result = await cmd.CheckPreconditionsAsync(Context);
-                            if (result.IsSuccess)
-                                description += $"{prefix}{cmd.Aliases.First()}\n";
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(description))
-                        {
-                            builder.AddField(x =>
-                            {
-                                x.Name = module.Name;
-                                x.Value = description;
-                                x.IsInline = false;
-                            });
-                        }
-                    }
-                    await ReplyAsync("", false, builder.Build());
-                }
-                */
 
         [Command("info")]
         [Alias("about")]
@@ -89,14 +51,17 @@ namespace LennyBOT.Modules
         {
             var serverId = (this.Context.Channel as IGuildChannel)?.GuildId.ToString() ?? "n/a";
             var response =
-                $"```Guild ID:   {serverId}\nChannel ID: {this.Context.Channel.Id}\nUser ID:    {this.Context.User.Id}```";
+                   "```json"
+                 + $"  Guild ID: {serverId}\n"
+                 + $"Channel ID: {this.Context.Channel.Id}\n"
+                 + $"   User ID: {this.Context.User.Id}```";
             return this.ReplyAsync(response);
         }
 
         [Command("help")]
         [Remarks("Get help about command")]
         [MinPermissions(AccessLevel.User)]
-        public async Task HelpCmdAsync(string command = null)
+        public async Task HelpCmdAsync([Remainder] string command = null)
         {
             command = command ?? "dasdkajdnjkasdkads@&$²`124578";
             if (command == "dasdkajdnjkasdkads@&$²`124578")
@@ -110,14 +75,23 @@ namespace LennyBOT.Modules
 
                 foreach (var module in this.service.Modules)
                 {
-                    string description = null;
+                    var description = string.Empty;
+
                     foreach (var cmd in module.Commands)
                     {
                         var result = await cmd.CheckPreconditionsAsync(this.Context).ConfigureAwait(false);
-                        if (result.IsSuccess)
+                        if (!result.IsSuccess)
                         {
-                            description += prefix + string.Join($", {prefix}", cmd.Aliases) + "\n";
+                            continue;
                         }
+
+                        var toAdd = prefix + string.Join($", {prefix}", cmd.Aliases) + "\n";
+                        if (description.Contains(toAdd))
+                        {
+                            continue;
+                        }
+
+                        description += toAdd;
                     }
 
                     if (!string.IsNullOrWhiteSpace(description))
@@ -153,12 +127,17 @@ namespace LennyBOT.Modules
                 foreach (var match in result.Commands)
                 {
                     var cmd = match.Command;
+                    var parameters = string.Join(", ", cmd.Parameters.Select(p => p.Name));
+                    if (parameters != string.Empty)
+                    {
+                        parameters = $"Parameters: {parameters}\n";
+                    }
 
                     builder.AddField(
                         x =>
                             {
                                 x.Name = string.Join(", ", cmd.Aliases);
-                                x.Value = $"Parameters: {string.Join(", ", cmd.Parameters.Select(p => p.Name))}\n"
+                                x.Value = $"{parameters}"
                                           + $"Description: {cmd.Remarks}\n";
                                 x.IsInline = false;
                             });

@@ -32,7 +32,7 @@ namespace LennyBOT.Config
 
         /// <summary> Gets the path of your bot's configuration file. </summary>
         [JsonIgnore]
-        private static string FileName { get; } = "Files\\test.json";
+        private static string FileName { get; } = "Files/config.json";
 
         /// <summary>
         /// Ensures the config file exists, if not it creates it.
