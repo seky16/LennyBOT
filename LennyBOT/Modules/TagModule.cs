@@ -1,27 +1,21 @@
 ﻿// ReSharper disable StyleCop.SA1600
 // ReSharper disable UnusedMember.Global
+// ReSharper disable StyleCop.SA1126
 namespace LennyBOT.Modules
 {
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
-    using Discord;
-    using Discord.Addons.EmojiTools;
     using Discord.Commands;
-    using Discord.WebSocket;
 
     using LennyBOT.Config;
+    using LennyBOT.Extensions;
     using LennyBOT.Services;
 
     [Group("tag")]
-    public class TagModule : ModuleBase<SocketCommandContext>
+    public class TagModule : LennyBase
     {
-        private static readonly Emoji TagNotFound = EmojiExtensions.FromText("question");
-        private static readonly Emoji Pass = EmojiExtensions.FromText("ok_hand");
-        private static readonly Emoji Fail = EmojiExtensions.FromText("no_entry");
-        private static readonly Emoji Removed = EmojiExtensions.FromText("put_litter_in_its_place");
-
         private static readonly List<string> Reserved = new List<string> { "create", "remove", "delete", "info", "owner" };
 
         [Command]
@@ -38,7 +32,7 @@ namespace LennyBOT.Modules
         public Task TagAsync([Remainder] string name)
         {
             var tag = TagService.GetTag(name);
-            return tag == null ? this.ReactAsync(TagNotFound) : this.ReplyAsync($"**{tag.Name}:** {tag.Content}");
+            return tag == null ? this.ReactAsync(Question) : this.ReplyAsync($"**{tag.Name}:** {tag.Content}");
         }
 
         [Command("create"), Priority(100)]
@@ -112,8 +106,5 @@ namespace LennyBOT.Modules
                 + "```";
             return this.ReplyAsync(output);
         }
-
-        private Task ReactAsync(IEmote emoji)
-            => this.Context.Message.AddReactionAsync(emoji);
     }
 }

@@ -3,17 +3,10 @@ namespace LennyBOT.Services
 {
     using System;
 
-    using UrbanDictionnet;
+    using NodaTime;
 
     public class SearchService
     {
-        public SearchService()
-        {
-            this.UrbanClient = new UrbanClient();
-        }
-
-        public UrbanClient UrbanClient { get; }
-
         public static string Extract(string input, string start, string end)
         {
             int startNum, endNum;
@@ -22,6 +15,19 @@ namespace LennyBOT.Services
             endNum = input.IndexOf(end, StringComparison.InvariantCultureIgnoreCase);
             input = input.Remove(endNum);
             return input;
+        }
+
+        public static string DateFromSeconds(long? seconds)
+        {
+            if (seconds == null)
+            {
+                return null;
+            }
+
+            var instant = Instant.FromUnixTimeSeconds((long)seconds);
+            var zone = DateTimeZoneProviders.Tzdb["Europe/Prague"];
+            var date = new ZonedDateTime(instant, zone);
+            return $"{date.Day}.{date.Month}.{date.Year} {date.Hour}:{date.Minute:D2}:{date.Second:D2}";
         }
     }
 }

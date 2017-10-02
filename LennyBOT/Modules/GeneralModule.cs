@@ -3,7 +3,10 @@
 namespace LennyBOT.Modules
 {
     using System.Linq;
+    using System.Text;
     using System.Threading.Tasks;
+
+    using Cookie.FOAAS;
 
     using Discord;
     using Discord.Commands;
@@ -12,12 +15,12 @@ namespace LennyBOT.Modules
     using LennyBOT.Config;
     using LennyBOT.Services;
 
-    [Name("Basic")]
-    public class BasicModule : ModuleBase<SocketCommandContext>
+    [Name("General")]
+    public class GeneralModule : LennyBase
     {
         private readonly FactService service;
 
-        public BasicModule(FactService service)
+        public GeneralModule(FactService service)
         {
             this.service = service;
         }
@@ -49,42 +52,6 @@ namespace LennyBOT.Modules
         {
             var factToPost = await this.service.GetFactAsync().ConfigureAwait(false);
             await this.ReplyAsync(factToPost).ConfigureAwait(false);
-        }
-
-        [Command("userinfo"), Alias("user", "u", "whois")]
-        [Remarks("Get info about user")]
-        [MinPermissions(AccessLevel.User)]
-        public Task UserInfoCmdAsync(SocketUser user = null)
-        {
-            user = user ?? this.Context.User;
-
-            var g = user.Game.ToString();
-            if (string.IsNullOrWhiteSpace(g))
-            {
-                g = "*None*";
-            }
-
-            var roles = (user as IGuildUser)?.RoleIds;
-            string r = null;
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            if (roles != null)
-            {
-                foreach (var role in roles)
-                {
-                    var rol = this.Context.Guild.GetRole(role);
-                    r = r + rol + "; ";
-                }
-            }
-
-            r = r?.Remove(r.Length - 2);
-
-            var nick = (user as IGuildUser)?.Nickname ?? user.Username;
-
-            // if (String.IsNullOrWhiteSpace(nick)) { nick = user.Username; }
-            return this.ReplyAsync(
-                $"```\nusername: {user}\nnickname: {nick}\n      id: {user.Id}\n created: {user.CreatedAt}\n  joined: {(user as IGuildUser)?.JoinedAt}\n  status: {user.Status}\n playing: {g}\n   roles: {r}\n```");
-
-            // \n avatar: {user.GetAvatarUrl()}");
         }
 
         [Command("quote"), Alias("q")]
@@ -144,19 +111,119 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public Task QuoteCmdAsync(IUser user, [Remainder] string content)
         {
-            var author = this.Context.Message.Author as IGuildUser;
-            var authorNick = author?.Nickname ?? this.Context.Message.Author.Username;
+            var authorNick = GetNickname(this.Context.Message.Author);
             var guildUser = user as SocketGuildUser;
             var nick = guildUser?.Nickname ?? user.Username;
             var color = guildUser?.Roles.OrderByDescending(x => x.Position).FirstOrDefault()?.Color ?? Color.Default;
             var guildIcon = guildUser?.Guild.IconUrl ?? string.Empty;
             var builder = new EmbedBuilder().WithDescription(content).WithColor(color)
                 .WithFooter(footer => { footer.WithText($"quoted by {authorNick}").WithIconUrl(guildIcon); })
-                .WithCurrentTimestamp()
-                .WithAuthor(
+                .WithCurrentTimestamp().WithAuthor(
                     new EmbedAuthorBuilder().WithName(nick ?? string.Empty)
                         .WithIconUrl(guildUser?.GetAvatarUrl() ?? string.Empty));
             return this.ReplyAsync(string.Empty, false, builder.Build());
+        }
+
+        [Command("emojify"), Alias("emoji")]
+        [MinPermissions(AccessLevel.User)]
+        public Task EmojifyAsync([Remainder] string text)
+        {
+            var stringBuilder = new StringBuilder();
+            foreach (var ch in text.ToLowerInvariant())
+            {
+                switch (ch)
+                {
+                    case 'a':
+                    case 'b':
+                    case 'c':
+                    case 'd':
+                    case 'e':
+                    case 'f':
+                    case 'g':
+                    case 'h':
+                    case 'i':
+                    case 'j':
+                    case 'k':
+                    case 'l':
+                    case 'm':
+                    case 'n':
+                    case 'o':
+                    case 'p':
+                    case 'q':
+                    case 'r':
+                    case 's':
+                    case 't':
+                    case 'u':
+                    case 'v':
+                    case 'w':
+                    case 'x':
+                    case 'y':
+                    case 'z':
+                        stringBuilder.Append($":regional_indicator_{ch}: ");
+                        break;
+                    case '0':
+                        stringBuilder.Append(":zero: ");
+                        break;
+                    case '1':
+                        stringBuilder.Append(":one: ");
+                        break;
+                    case '2':
+                        stringBuilder.Append(":two: ");
+                        break;
+                    case '3':
+                        stringBuilder.Append(":three: ");
+                        break;
+                    case '4':
+                        stringBuilder.Append(":four: ");
+                        break;
+                    case '5':
+                        stringBuilder.Append(":five: ");
+                        break;
+                    case '6':
+                        stringBuilder.Append(":six: ");
+                        break;
+                    case '7':
+                        stringBuilder.Append(":seven: ");
+                        break;
+                    case '8':
+                        stringBuilder.Append(":eight: ");
+                        break;
+                    case '9':
+                        stringBuilder.Append(":nine: ");
+                        break;
+                    case '!':
+                        stringBuilder.Append(":exclamation: ");
+                        break;
+                    case '?':
+                        stringBuilder.Append(":question: ");
+                        break;
+                    case '+':
+                        stringBuilder.Append(":heavy_plus_sign: ");
+                        break;
+                    case '-':
+                        stringBuilder.Append(":heavy_minus_sign: ");
+                        break;
+                    case '×':
+                        stringBuilder.Append(":heavy_multiplication_x: ");
+                        break;
+                    case '÷':
+                        stringBuilder.Append(":heavy_division_sign: ");
+                        break;
+                    case '$':
+                        stringBuilder.Append(":heavy_dollar_sign: ");
+                        break;
+                    default:
+                        stringBuilder.Append($"**{ch.ToString().ToUpper()}** ");
+                        break;
+                }
+            }
+
+            return this.ReplyAsync(stringBuilder.ToString());
+
+            /*[Command("fuck"), Remarks("Gives a random fuck about your useless fucking command.")]
+            public async Task FoaasAsync(IGuildUser user = null)
+                => await this.ReplyAsync(await FOAAS.RandomAsync(From: this.Context.User.Username, Name: user != null ? GetNickname(user) : "Kevin").ConfigureAwait(false)).ConfigureAwait(false);
+            */
         }
     }
 }

@@ -7,10 +7,13 @@ namespace LennyBOT.Modules
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
     using AngleSharp;
+
+    using Cookie.Steam;
 
     using CsfdAPI;
 
@@ -18,60 +21,52 @@ namespace LennyBOT.Modules
     using Discord.Commands;
 
     using LennyBOT.Config;
+    using LennyBOT.Models;
     using LennyBOT.Services;
 
     using Newtonsoft.Json;
-
-    using PortableSteam;
+    using Newtonsoft.Json.Linq;
 
     using SteamStoreQuery;
 
+
     [Name("Search")]
-    public class SearchModule : ModuleBase<SocketCommandContext>
+    public class SearchModule : LennyBase
     {
-        private readonly SearchService service;
-
-        public SearchModule(SearchService service)
-        {
-            this.service = service;
-        }
-
         [Command("define", RunMode = RunMode.Async)]
         [Alias("def", "urban")]
         [Remarks("Look up a definition in UrbanDictionary")]
         [MinPermissions(AccessLevel.User)]
         public async Task DefineCmdAsync([Remainder] string query)
         {
-            var myDefiniton = await this.service.UrbanClient.GetWordAsync(query).ConfigureAwait(false);
-            var defList = myDefiniton.List;
-
-            var builder = new EmbedBuilder().WithTitle($"{query}")
-                .WithUrl("https://www.urbandictionary.com/define.php?term=" + query.Replace(' ', '+'))
-                .WithColor(new Color(255, 84, 33)).WithTimestamp(DateTimeOffset.Now).WithAuthor(
-                    author =>
-                        {
-                            author.WithName("Urban Dictionary").WithUrl("https://urbandictionary.com").WithIconUrl(
-                                "https://d2gatte9o95jao.cloudfront.net/assets/apple-touch-icon-55f1ee4ebfd5444ef5f8d5ba836a2d41.png");
-                        });
-            for (var i = 0; i < Math.Min(3, defList.Count); i++)
+            using (var c = new HttpClient())
             {
-                var def = defList[i].Definition;
-                if (def.Length > 250)
+                var client = await c.GetAsync(
+                                 $"http://api.urbandictionary.com/v0/define?term={query.Replace(' ', '+')}").ConfigureAwait(false);
+                if (!client.IsSuccessStatusCode)
                 {
-                    def = def.Substring(0, 250) + "…";
+                    await this.ReplyAsync("Couldn't communicate with Urban's API.").ConfigureAwait(false);
+                    return;
                 }
 
-                var ex = defList[i].Example;
-                if (ex.Length > 1010)
+                var data = JToken.Parse(await client.Content.ReadAsStringAsync().ConfigureAwait(false)).ToObject<Urban>();
+                if (!data.List.Any())
                 {
-                    ex = ex.Substring(0, 1010) + "…";
+                    await this.ReplyAsync($"Couldn't find anything related to *{query}*.").ConfigureAwait(false);
+                    return;
                 }
 
-                builder.AddField($"{i + 1}: {def}", $"Example: {ex}");
+                var termInfo = data.List[new Random().Next(0, data.List.Count)];
+                var embed = new EmbedBuilder()
+                    .WithUrl("https://www.urbandictionary.com/define.php?term=" + query.Replace(' ', '+'))
+                    .WithColor(new Color(255, 84, 33))
+                    .WithCurrentTimestamp()
+                    .WithAuthor("Urban Dictionary", "https://d2gatte9o95jao.cloudfront.net/assets/apple-touch-icon-55f1ee4ebfd5444ef5f8d5ba836a2d41.png", "https://urbandictionary.com")
+                    .WithFooter($"Related Terms: {string.Join(", ", data.Tags)}" ?? "No related terms.")
+                    .AddField($"Definition of {termInfo.Word}", termInfo.Definition)
+                    .AddField("Example", termInfo.Example);
+                await this.ReplyAsync(string.Empty, embed: embed.Build()).ConfigureAwait(false);
             }
-
-            var embed = builder.Build();
-            await this.ReplyAsync(string.Empty, false, embed).ConfigureAwait(false);
         }
 
         [Command("youtube", RunMode = RunMode.Async)]
@@ -86,6 +81,40 @@ namespace LennyBOT.Modules
                     "https://www.youtube.com/results?search_query=" + Regex.Replace(query, @"\s+", "+"));
                 return this.ReplyAsync(
                     "https://www.youtube.com/watch?" + Regex.Split(Regex.Split(html, @"\/watch\?")[1], "\"")[0]);
+            }
+        }
+
+        [Command("lmgtfy"), Remarks("Googles something for that special person who is crippled")]
+        [MinPermissions(AccessLevel.User)]
+        public Task LmgtfyAsync([Remainder] string search = "How to use Lmgtfy")
+            => this.ReplyAsync($"**Your special URL: **<http://lmgtfy.com/?q={ Uri.EscapeUriString(search) }>");
+
+        [Command("wiki"), Remarks("Searches wikipedia for your terms")]
+        public async Task WikiAsync([Remainder]string search)
+        {
+            using (var client = new HttpClient())
+            {
+                var getResult = await client.GetAsync($"https://en.wikipedia.org/w/api.php?action=opensearch&search={search}").ConfigureAwait(false);
+                var getContent = await getResult.Content.ReadAsStringAsync().ConfigureAwait(false);
+                dynamic responseObject = JsonConvert.DeserializeObject(getContent);
+                string title = responseObject[1][0];
+                string firstParagraph = responseObject[2][0];
+                string url = responseObject[3][0];
+
+                var builder = new StringBuilder();
+                foreach (var urls in responseObject[3])
+                {
+                    builder.AppendLine($"<{urls.ToString()}>");
+                }
+
+                if (string.IsNullOrWhiteSpace(firstParagraph))
+                {
+                    await this.ReplyAsync("No results found.").ConfigureAwait(false);
+                }
+                else
+                {
+                    await this.ReplyAsync($"{title}: {url}\n**See also:**\n{builder}").ConfigureAwait(false);
+                }
             }
         }
 
@@ -194,126 +223,68 @@ namespace LennyBOT.Modules
         [Alias("steam u")]
         [Remarks("Steam user info")]
         [MinPermissions(AccessLevel.User)]
-        public async Task SteamUserCmdAsync([Remainder] string user = null)
+        public async Task SteamUserCmdAsync([Remainder] string userId = null)
         {
-            if (user == null)
-            {
-                await this.ReplyAsync(
-                        "`You did not specify user`\nHow to get steam user? http://i.imgur.com/pM9dff5.png")
-                    .ConfigureAwait(false);
-                return;
-            }
-
             try
             {
-                SteamWebAPI.SetGlobalKey(Config.Configuration.Load().SteamApiKey);
-                var steamUser = (await SteamWebAPI.General().ISteamUser().ResolveVanityURL(user).GetResponseAsync()
-                                     .ConfigureAwait(false)).Data.Identity;
-                if (steamUser == null)
+                var steamClient = new SteamClient(Config.Configuration.Load().SteamApiKey);
+                var userInfo = await steamClient.GetUsersInfoAsync(new List<string> { userId }).ConfigureAwait(false);
+                var userGames = await steamClient.OwnedGamesAsync(userId).ConfigureAwait(false);
+                var userRecent = await steamClient.RecentGamesAsync(userId).ConfigureAwait(false);
+
+                var info = userInfo.PlayersInfo.Players.FirstOrDefault();
+
+                string state;
+                switch (info?.ProfileState)
                 {
-                    await this.ReplyAsync("`Could not find steam user`").ConfigureAwait(false);
-                    return;
+                    case 0:
+                        state = "Offline";
+                        break;
+                    case 1:
+                        state = "Online";
+                        break;
+                    case 2:
+                        state = "Busy";
+                        break;
+                    case 3:
+                        state = "Away";
+                        break;
+                    case 4:
+                        state = "Snooze";
+                        break;
+                    case 5:
+                        state = "Looking to trade";
+                        break;
+                    case null:
+                        state = null;
+                        break;
+                    default:
+                        state = "Looking to play";
+                        break;
                 }
 
-                // var Games = SteamWebAPI.General().IPlayerService().GetOwnedGames(SteamUser).GetResponse();
-                var badges = await SteamWebAPI.General().IPlayerService().GetBadges(steamUser).GetResponseAsync()
-                                 .ConfigureAwait(false);
-                var lastPlayed = await SteamWebAPI.General().IPlayerService().GetRecentlyPlayedGames(steamUser)
-                                     .GetResponseAsync().ConfigureAwait(false);
-                var friends = await SteamWebAPI.General().ISteamUser().GetFriendList(steamUser, RelationshipType.Friend)
-                                  .GetResponseAsync().ConfigureAwait(false);
+                var embed = new EmbedBuilder()
+                    .WithColor(Color.DarkBlue)
+                    .WithThumbnailUrl(info?.AvatarFullUrl)
+                    .WithTitle(info?.RealName ?? info?.Name)
+                    .WithUrl(info?.ProfileLink)
+                    .WithCurrentTimestamp();
+                embed.AddField("Display Name", $"{info?.Name}", true);
+                embed.AddField("Status", state, true);
+                embed.AddField("Profile Created", SearchService.DateFromSeconds(info?.TimeCreated), true);
+                embed.AddField("Last Online", SearchService.DateFromSeconds(info?.LastLogOff), true);
+                embed.AddField("Country", $"{info?.Country ?? "No Country"}", true);
+                ////embed.AddField("Primary Clan ID", info.PrimaryClanId, true);
+                embed.AddField("Owned Games", userGames.OwnedGames.GamesCount, true);
+                embed.AddField("Recently Played Games", $"{userRecent.RecentGames.TotalCount}\n{string.Join(", ", userRecent.RecentGames.GamesList.Select(x => x.Name))}", true);
 
-                // ------------- avatarUrl + nickname
-                var config = AngleSharp.Configuration.Default.WithDefaultLoader();
-                var address = "https://steamcommunity.com/id/" + user;
-                var document = await BrowsingContext.New(config).OpenAsync(address).ConfigureAwait(false);
-                var sourceText = document.Source.Text;
-                var avatarUrl = SearchService.Extract(
-                    sourceText,
-                    "<div class=\"playerAvatarAutoSizeInner\"><img src=\"",
-                    "\"");
-                var nickname = SearchService.Extract(sourceText, "<span class=\"actual_persona_name\">", "</span>");
-
-                // -------------
-                var game1 = string.Empty;
-                var game2 = string.Empty;
-                var game3 = string.Empty;
-                var game4 = string.Empty;
-                var game5 = string.Empty;
-                var gamePlay1 = string.Empty;
-                var gamePlay2 = string.Empty;
-                var gamePlay3 = string.Empty;
-                var gamePlay4 = string.Empty;
-                var gamePlay5 = string.Empty;
-                if (lastPlayed.Data.TotalCount > 0)
-                {
-                    game1 = lastPlayed.Data.Games[0].Name + "  ";
-                    gamePlay1 = (int)Math.Ceiling(lastPlayed.Data.Games[0].PlayTimeTotal.TotalHours) + " hours";
-                }
-
-                if (lastPlayed.Data.TotalCount > 1)
-                {
-                    game2 = lastPlayed.Data.Games[1].Name + "  ";
-                    gamePlay2 = (int)Math.Ceiling(lastPlayed.Data.Games[1].PlayTimeTotal.TotalHours) + " hours";
-                }
-
-                if (lastPlayed.Data.TotalCount > 2)
-                {
-                    game3 = lastPlayed.Data.Games[2].Name + "  ";
-                    gamePlay3 = (int)Math.Ceiling(lastPlayed.Data.Games[2].PlayTimeTotal.TotalHours) + " hours";
-                }
-
-                if (lastPlayed.Data.TotalCount > 3)
-                {
-                    game4 = lastPlayed.Data.Games[3].Name + "  ";
-                    gamePlay4 = (int)Math.Ceiling(lastPlayed.Data.Games[3].PlayTimeTotal.TotalHours) + " hours";
-                }
-
-                if (lastPlayed.Data.TotalCount > 4)
-                {
-                    game5 = lastPlayed.Data.Games[4].Name + "  ";
-                    gamePlay5 = (int)Math.Ceiling(lastPlayed.Data.Games[4].PlayTimeTotal.TotalHours) + " hours";
-                }
-
-                var builder = new EmbedBuilder().WithAuthor(
-                        author =>
-                            {
-                                author.WithName("Steam");
-                                author.WithIconUrl(
-                                    "https://images.techhive.com/images/article/2016/11/steam_logo2-100691182-orig.jpg");
-                                author.WithUrl("https://steamcommunity.com/");
-                            }).WithTitle($"{nickname} | Lvl {badges.Data.PlayerLevel} | Xp {badges.Data.PlayerXP}")
-                    .WithUrl("https://steamcommunity.com/id/" + user).WithThumbnailUrl(avatarUrl);
-
-                builder.AddField(
-                    x =>
-                        {
-                            x.Name = "Info";
-                            x.Value = $"```json\nFriends: {friends.Data.Friends.Count}\n"
-                                      + /*$"<Games {Games.Data.GameCount}>\n" +*/
-                                      $" Badges: {badges.Data.Badges.Count}```";
-                            x.IsInline = false;
-                        });
-                builder.AddField(
-                    x =>
-                        {
-                            x.Name = "Game";
-                            x.Value = $"{game1}\n{game2}\n{game3}\n{game4}\n{game5}";
-                            x.IsInline = true;
-                        });
-                builder.AddField(
-                    x =>
-                        {
-                            x.Name = "Playtime";
-                            x.Value = $"{gamePlay1}\n{gamePlay2}\n{gamePlay3}\n{gamePlay4}\n{gamePlay5}";
-                            x.IsInline = true;
-                        });
-                var embed = builder.Build();
-                await this.ReplyAsync(string.Empty, false, embed).ConfigureAwait(false);
+                await this.ReplyAsync(string.Empty, embed: embed.Build()).ConfigureAwait(false);
             }
             catch
             {
-                await this.ReplyAsync("`Something went wrong!`").ConfigureAwait(false);
+                await this.ReplyAsync(
+                        "**Error** \nAre you sure you entered a correct steamID?\nYou can get steamID here: <http://steamidfinder.com/>. Use *steamID64*")
+                    .ConfigureAwait(false);
             }
         }
 
@@ -383,17 +354,54 @@ namespace LennyBOT.Modules
             }
         }
 
-        /*[Command("pornhub"), Alias("ph")]
-        [Remarks("Search for PornHub video")]
-        [MinPermissions(AccessLevel.User)]
-        public Task PornhubCmdAsync([Remainder] string keywords)
+        [Command("Trump"), Remarks("Fetches random Quotes/Tweets said by Donald Trump.")]
+        public async Task TrumpAsync()
         {
-            var query = keywords.Replace(" ", "+");
-            using (var client = new WebClient())
+            using (var client = new HttpClient())
             {
-                var html = client.DownloadString("https://www.pornhub.com/video/search?search=" + query);
-                return this.ReplyAsync("");
+                var get = await client.GetAsync("https://api.tronalddump.io/random/quote").ConfigureAwait(false);
+                if (!get.IsSuccessStatusCode)
+                {
+                    await this.ReplyAsync("Using TrumpDump API was the worse trade deal, maybe ever.").ConfigureAwait(false);
+                    return;
+                }
+
+                var jsonObj = JObject.Parse(await get.Content.ReadAsStringAsync().ConfigureAwait(false));
+                ////await this.ReplyAsync(jsonObj["value"].ToString()).ConfigureAwait(false);
+                var embedB = new EmbedBuilder()
+                    .WithAuthor("Donald Trump", string.Empty, "https://www.tronalddump.io")
+                    .WithTitle(string.Empty)
+                    .WithThumbnailUrl("https://i.redd.it/0x4bejtshuhx.png")
+                    .WithColor(Color.DarkBlue)
+                    .WithDescription(jsonObj["value"].ToString());
+
+                // ReSharper disable once InlineOutVariableDeclaration
+                DateTimeOffset timestamp;
+                if (DateTimeOffset.TryParse(jsonObj["appeared_at"].ToString(), out timestamp))
+                {
+                    timestamp = timestamp.AddHours(-timestamp.Offset.Hours);
+                    embedB.Timestamp = timestamp;
+                }
+
+                await this.ReplyAsync(string.Empty, false, embedB.Build()).ConfigureAwait(false);
             }
-        }*/
+        }
+
+        [Command("yomama"), Remarks("Gets a random yomama Joke"), Alias("yomomma", "yomom", "your mom")]
+        public async Task YomamaAsync()
+        {
+            using (var client = new HttpClient())
+            {
+                var get = await client.GetAsync("http://api.yomomma.info/").ConfigureAwait(false);
+                if (!get.IsSuccessStatusCode)
+                {
+                    await this.ReplyAsync("Yo mama so fat she crashed Yomomma's API.").ConfigureAwait(false);
+                    return;
+                }
+
+                var jsonObj = JObject.Parse(await get.Content.ReadAsStringAsync().ConfigureAwait(false));
+                await this.ReplyAsync(jsonObj["joke"].ToString()).ConfigureAwait(false);
+            }
+        }
     }
 }

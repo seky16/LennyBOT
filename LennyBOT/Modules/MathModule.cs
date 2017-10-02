@@ -1,5 +1,6 @@
 ﻿// ReSharper disable StyleCop.SA1600
 // ReSharper disable UnusedMember.Global
+// ReSharper disable StyleCop.SA1126
 namespace LennyBOT.Modules
 {
     using System;
@@ -15,9 +16,10 @@ namespace LennyBOT.Modules
     using FixerSharp;
 
     using LennyBOT.Config;
+    using LennyBOT.Extensions;
 
     [Name("Math")]
-    public class MathModule : ModuleBase<SocketCommandContext>
+    public class MathModule : LennyBase
     {
         [Command("calculate", RunMode = RunMode.Async), Alias("calc", "math")]
         [Remarks("Calculate simple equations")]
@@ -47,7 +49,8 @@ namespace LennyBOT.Modules
             }
             catch (Exception)
             {
-                await this.ReplyAsync("```fix\nSomething went wrong```").ConfigureAwait(false);
+                ////await this.ReplyAsync("```fix\nSomething went wrong```").ConfigureAwait(false);
+                await this.ReactAsync(Fail).ConfigureAwait(false);
             }
         }
 
@@ -57,7 +60,6 @@ namespace LennyBOT.Modules
         public async Task ConvertAsync(string amount, string from, string to)
         {
             amount = amount.Replace(',', '.');
-            // ReSharper disable StyleCop.SA1126
             if (!double.TryParse(amount, out var amountD))
             {
                 await this.ReactAsync(EmojiExtensions.FromText(":question:")).ConfigureAwait(false);
@@ -86,7 +88,6 @@ namespace LennyBOT.Modules
             }
 
             amount = amount.Replace(',', '.');
-            // ReSharper disable StyleCop.SA1126
             if (!double.TryParse(amount, out var amountD))
             {
                 await this.ReactAsync(EmojiExtensions.FromText(":question:")).ConfigureAwait(false);
@@ -104,8 +105,5 @@ namespace LennyBOT.Modules
                 .WithDescription($"{amountD.ToString(CultureInfo.InvariantCulture)} {from.ToUpper()} = **{result.ToString(CultureInfo.InvariantCulture)} {to.ToUpper()}**");
             await this.ReplyAsync(string.Empty, false, builder.Build()).ConfigureAwait(false);
         }
-
-        private Task ReactAsync(IEmote emoji)
-            => this.Context.Message.AddReactionAsync(emoji);
     }
 }

@@ -10,7 +10,7 @@ namespace LennyBOT.Modules
     using LennyBOT.Services;
 
     [Name("Random events")]
-    public class RandomModule : ModuleBase<SocketCommandContext>
+    public class RandomModule : LennyBase
     {
         private readonly RandomService service;
 
@@ -24,7 +24,7 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public Task RandCmdAsync(int from = 1, int to = 100)
         {
-            var r = this.service.Between(from, to);
+            var r = this.service.Generate(from, to);
             return this.ReplyAsync(r.ToString());
         }
 
@@ -33,7 +33,7 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public Task CoinCmdAsync()
         {
-            var r = this.service.Between(1, 2);
+            var r = this.service.Generate(1, 2);
             string res;
             switch (r)
             {
@@ -56,7 +56,7 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public Task DecideCmdAsync(params string[] args)
         {
-            var r = this.service.Between(0, args.Length - 1);
+            var r = this.service.Generate(0, args.Length - 1);
             return this.ReplyAsync(args[r]);
         }
 
@@ -79,7 +79,7 @@ namespace LennyBOT.Modules
                 var sum = 0;
                 for (var i = 0; i < number; i++)
                 {
-                    var roll = this.service.Between(1, sides);
+                    var roll = this.service.Generate(1, sides);
                     res += " " + roll;
                     sum += roll;
                 }

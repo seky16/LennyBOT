@@ -1,16 +1,26 @@
 // ReSharper disable StyleCop.SA1600
-
 namespace LennyBOT.Services
 {
     using System;
     using System.Security.Cryptography;
-
-    // http://stackoverflow.com/a/37804448
+    
     public class RandomService
     {
         private readonly RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
 
-        public int Between(int min, int max)
+        /// <summary>
+        /// Generate true random number (http://stackoverflow.com/a/37804448)
+        /// </summary>
+        /// <param name="min">
+        /// Minimal value to generate (inclusive).
+        /// </param>
+        /// <param name="max">
+        /// Maximal value to generate (inclusive).
+        /// </param>
+        /// <returns>
+        /// <see cref="int"/>
+        /// </returns>
+        public int Generate(int min, int max)
         {
             // definuje array bytů
             var randomNumber = new byte[1];
@@ -26,7 +36,7 @@ namespace LennyBOT.Services
             var multiplier = Math.Abs(rngD / 255d);
 
             // ze zadaných max a min spočítá rozsah, připočítá 1 pro zaokrouhlování
-            var range = max - min + 1;
+            var range = max - min;
 
             // rozsah vynásobí koeficientem, zaokrouhlí dolů
             var randomValue = Math.Floor(multiplier * range);

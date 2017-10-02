@@ -3,19 +3,25 @@
 namespace LennyBOT.Modules
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Threading.Tasks;
 
     using Discord;
+    using Discord.Addons.EmojiTools;
     using Discord.Commands;
     using Discord.WebSocket;
 
     using LennyBOT.Config;
 
     [Name("BotOwner-only commands")]
-    public class BotOwnerModule : ModuleBase<SocketCommandContext>
+    public class BotOwnerModule : LennyBase
     {
+        public BotOwnerModule(DiscordSocketClient client)
+        {
+            this.Client = client;
+        }
+
+        private DiscordSocketClient Client { get; }
+
         [Command("say"), Alias("s")]
         [Remarks("Make the bot say something")]
         [MinPermissions(AccessLevel.BotOwner)]
@@ -37,10 +43,13 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.BotOwner)]
         public async Task RestartCmdAsync()
         {
-            await this.ReplyAsync("Restarting... :arrows_counterclockwise:").ConfigureAwait(false);
-            await this.Context.Client.SetStatusAsync(UserStatus.Invisible).ConfigureAwait(false);
-            await this.Context.Client.StopAsync().ConfigureAwait(false);
-            Environment.Exit(0);
+            var msg = await this.ReplyAsync("Restarting... :arrows_counterclockwise:").ConfigureAwait(false);
+            await this.Client.StopAsync().ConfigureAwait(false);
+            await this.Client.LogoutAsync().ConfigureAwait(false);
+            await this.Client.LoginAsync(TokenType.Bot, Configuration.Load().Token).ConfigureAwait(false);
+            await this.Client.StartAsync().ConfigureAwait(false);
+            ////await msg.AddReactionAsync(EmojiExtensions.FromText(":white_check_mark:")).ConfigureAwait(false);
+            await msg.ModifyAsync(m => m.Content = "Restarted :white_check_mark:").ConfigureAwait(false);
         }
 
         [Command("botnick")]
@@ -65,7 +74,7 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.BotOwner)]
         public Task StreamingCmdAsync([Remainder]string game) => this.Context.Client.SetGameAsync(game, "http://twitch.tv/seky16", StreamType.Twitch);
 
-        [Command("clean"), Alias("delete", "purge")]
+        /*[Command("clean", RunMode = RunMode.Async), Alias("delete", "purge")]
         [Remarks("delete messages")]
         [MinPermissions(AccessLevel.BotOwner)]
         public async Task CleanCmdAsync(int amount = 10, SocketGuildUser user = null)
@@ -106,6 +115,6 @@ namespace LennyBOT.Modules
             }
 
             await this.ReplyAsync($"Deleted {messages.Count()} messages of user **{nick}**.{str}").ConfigureAwait(false);
-        }
+        }*/
     }
 }

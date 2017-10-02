@@ -111,6 +111,7 @@ namespace LennyBOT
             // Repeat this for all the service classes
             // and other dependencies that your commands might need.
             // _map.AddSingleton(new SomeServiceClass());
+            this.map.AddSingleton(this.client);
             this.map.AddSingleton(new FactService());
             this.map.AddSingleton(new ShekelsService());
             this.map.AddSingleton(new RandomService());
