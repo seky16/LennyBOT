@@ -1,4 +1,4 @@
-﻿// ReSharper disable StyleCop.SA1600
+// ReSharper disable StyleCop.SA1600
 namespace LennyBOT.Extensions
 {
     using System.Linq;
@@ -10,7 +10,7 @@ namespace LennyBOT.Extensions
     {
         public static async Task<IMessage> GetLastMessageAsync(this ITextChannel channel)
         {
-            var msgEnum = await channel.GetMessagesAsync(1).Flatten();
+            var msgEnum = await channel.GetMessagesAsync(1).FlattenAsync();
             var msg = msgEnum.FirstOrDefault();
             return msg;
         }
