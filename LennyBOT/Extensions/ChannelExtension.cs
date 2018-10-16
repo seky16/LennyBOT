@@ -10,7 +10,7 @@ namespace LennyBOT.Extensions
     {
         public static async Task<IMessage> GetLastMessageAsync(this ITextChannel channel)
         {
-            var msgEnum = await channel.GetMessagesAsync(1).Flatten().ConfigureAwait(false);
+            var msgEnum = await channel.GetMessagesAsync(1).Flatten();
             var msg = msgEnum.FirstOrDefault();
             return msg;
         }
