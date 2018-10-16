@@ -69,11 +69,11 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.BotOwner)]
         public Task PlayingCmdAsync([Remainder]string game) => this.Context.Client.SetGameAsync(game);
 
-        [Command("streaming")]
+        /*[Command("streaming")]
         [Remarks("Set stream of bot")]
         [MinPermissions(AccessLevel.BotOwner)]
         public Task StreamingCmdAsync([Remainder]string game) => this.Context.Client.SetGameAsync(game, "http://twitch.tv/seky16", StreamType.Twitch);
-
+        */
         /*[Command("clean", RunMode = RunMode.Async), Alias("delete", "purge")]
         [Remarks("delete messages")]
         [MinPermissions(AccessLevel.BotOwner)]
