@@ -4,9 +4,6 @@ dist: trusty
 sudo: required
 mono: none
 dotnet: 2.0.0
-install:
-  - nuget sources Add -Name "DiscordNet" -Source https://www.myget.org/F/discord-net/api/v3/index.json
-  - nuget restore ./LennyBOT.sln
 script:
-  - dotnet restore
+  - dotnet restore -s https://www.myget.org/F/discord-net/api/v3/index.json
   - dotnet publish -r ubuntu.16.04-x64
