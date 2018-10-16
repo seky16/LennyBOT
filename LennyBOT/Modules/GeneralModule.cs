@@ -203,12 +203,12 @@ namespace LennyBOT.Modules
                     case '-':
                         stringBuilder.Append(":heavy_minus_sign: ");
                         break;
-                    case '×':
+                    /*case 'Ã—':
                         stringBuilder.Append(":heavy_multiplication_x: ");
                         break;
-                    case '÷':
+                    case 'Ã·':
                         stringBuilder.Append(":heavy_division_sign: ");
-                        break;
+                        break;*/
                     case '$':
                         stringBuilder.Append(":heavy_dollar_sign: ");
                         break;
