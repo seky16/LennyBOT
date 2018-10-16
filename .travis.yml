@@ -5,5 +5,5 @@ sudo: required
 mono: none
 dotnet: 2.0.0
 script:
-  - dotnet restore -s https://www.myget.org/F/discord-net/api/v3/index.json
+  - dotnet restore -s https://api.nuget.org/v3/index.json -s https://www.myget.org/F/discord-net/api/v3/index.json
   - dotnet publish -r ubuntu.16.04-x64
