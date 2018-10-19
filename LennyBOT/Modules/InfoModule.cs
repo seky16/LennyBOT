@@ -197,7 +197,7 @@ namespace LennyBOT.Modules
                 embed.AddField("Created", user.CreatedAt.ToPragueTimeString(), true);
                 embed.AddField("Joined guild", user.JoinedAt.ToPragueTimeString(), true);
                 embed.AddField("Status", user.Status, true);
-                embed.AddField("Playing", user.Game?.ToString() ?? "*NOTHING*", true);
+                embed.AddField("Playing", user.Activity?.ToString() ?? "*NOTHING*", true);
                 embed.AddField("Permissions", string.Join(", ", user.GuildPermissions.ToList()), true);
                 embed.AddField("Roles", string.Join(", ", roles.OrderByDescending(x => x.Position)), true);
             }

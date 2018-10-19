@@ -26,8 +26,7 @@ namespace LennyBOT.Services
 
         public async Task<string> GetFactAsync()
         {
-            var rand = new RandomService();
-            var randomFactIndex = rand.Generate(0, this.numOfFacts - 1);
+            var randomFactIndex = RandomService.Generate(0, this.numOfFacts - 1);
             var factToPost = this.randomFacts[randomFactIndex];
             await Task.Delay(0).ConfigureAwait(false);
             return factToPost;

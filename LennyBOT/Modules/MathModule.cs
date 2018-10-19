@@ -6,7 +6,9 @@ namespace LennyBOT.Modules
     using System;
     using System.Data;
     using System.Globalization;
+    using System.Net.Http;
     using System.Threading.Tasks;
+    using System.Web;
 
     using Discord;
     using Discord.Addons.EmojiTools;
@@ -18,40 +20,37 @@ namespace LennyBOT.Modules
     using LennyBOT.Config;
     using LennyBOT.Extensions;
 
+    using Newtonsoft.Json.Linq;
+
     [Name("Math")]
     public class MathModule : LennyBase
     {
         [Command("calculate", RunMode = RunMode.Async), Alias("calc", "math")]
-        [Remarks("Calculate simple equations")]
+        [Remarks("Use math.js to evaluate expression. See http://mathjs.org/docs/ for more information.")]
         [MinPermissions(AccessLevel.User)]
-        public async Task CalculateAsync([Remainder]string equation)
-        { // Needs improvement
-            // Replaces all the possible math symbols that may appear
-            // Invalid for the computer to compute
-            equation = equation.Trim('`').ToUpper()
-            .Replace("×", "*")
-            .Replace("X", "*")
-            .Replace("÷", "/")
-            .Replace("MOD", "%")
-            .Replace("PI", "3.14159265359")
-            .Replace("E", "2.718281828459045");
-            try
+        public async Task CalculateAsync([Remainder]string expression)
+        {
+            expression = expression.Replace("`", string.Empty);
+            var url = $"http://api.mathjs.org/v1/?expr={Uri.EscapeDataString(expression)}";
+
+            using (var client = new HttpClient())
             {
-                var value = new DataTable().Compute(equation, null).ToString();
-                if (value == "NaN")
+                var get = await client.GetAsync(url).ConfigureAwait(false);
+                if (!get.IsSuccessStatusCode)
                 {
-                    await this.ReplyAsync("`Infinity or undefined`").ConfigureAwait(false);
+                    await this.ReplyAsync("http://api.mathjs.org/ couldn't be reached.").ConfigureAwait(false);
+                    return;
                 }
-                else
-                {
-                    await this.ReplyAsync($"`{value}`").ConfigureAwait(false);
-                }
+
+                var result = await get.Content.ReadAsStringAsync().ConfigureAwait(false);
+                await this.ReplyAsync($"`{expression} = {result}`").ConfigureAwait(false);
             }
-            catch (Exception)
+
+            /*catch (Exception)
             {
                 ////await this.ReplyAsync("```fix\nSomething went wrong```").ConfigureAwait(false);
                 await this.ReactAsync(Fail).ConfigureAwait(false);
-            }
+            }*/
         }
 
         [Command("convert", RunMode = RunMode.Sync), Alias("conv")]

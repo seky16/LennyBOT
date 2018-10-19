@@ -12,19 +12,12 @@ namespace LennyBOT.Modules
     [Name("Random events")]
     public class RandomModule : LennyBase
     {
-        private readonly RandomService service;
-
-        public RandomModule(RandomService service)
-        {
-            this.service = service;
-        }
-
         [Command("random"), Alias("rand")]
         [Remarks("Generate TRUE random number between two values. (Info: http://stackoverflow.com/a/37804448)")]
         [MinPermissions(AccessLevel.User)]
         public Task RandCmdAsync(int from = 1, int to = 100)
         {
-            var r = this.service.Generate(from, to);
+            var r = RandomService.Generate(from, to);
             return this.ReplyAsync(r.ToString());
         }
 
@@ -33,7 +26,7 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public Task CoinCmdAsync()
         {
-            var r = this.service.Generate(1, 2);
+            var r = RandomService.Generate(1, 2);
             string res;
             switch (r)
             {
@@ -52,11 +45,11 @@ namespace LennyBOT.Modules
         }
 
         [Command("choose"), Alias("decide")]
-        [Remarks("Flips a coin")]
+        [Remarks("Let the RNGesus decide for you")]
         [MinPermissions(AccessLevel.User)]
         public Task DecideCmdAsync(params string[] args)
         {
-            var r = this.service.Generate(0, args.Length - 1);
+            var r = RandomService.Generate(0, args.Length - 1);
             return this.ReplyAsync(args[r]);
         }
 
@@ -79,7 +72,7 @@ namespace LennyBOT.Modules
                 var sum = 0;
                 for (var i = 0; i < number; i++)
                 {
-                    var roll = this.service.Generate(1, sides);
+                    var roll = RandomService.Generate(1, sides);
                     res += " " + roll;
                     sum += roll;
                 }

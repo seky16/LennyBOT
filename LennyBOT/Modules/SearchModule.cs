@@ -11,10 +11,6 @@ namespace LennyBOT.Modules
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
-    using AngleSharp;
-
-    using Cookie.Steam;
-
     using CsfdAPI;
 
     using Discord;
@@ -27,9 +23,6 @@ namespace LennyBOT.Modules
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
-    using SteamStoreQuery;
-
-
     [Name("Search")]
     public class SearchModule : LennyBase
     {
@@ -39,32 +32,32 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task DefineCmdAsync([Remainder] string query)
         {
-            using (var c = new HttpClient())
+            using (var client = new HttpClient())
             {
-                var client = await c.GetAsync(
+                var result = await client.GetAsync(
                                  $"http://api.urbandictionary.com/v0/define?term={query.Replace(' ', '+')}").ConfigureAwait(false);
-                if (!client.IsSuccessStatusCode)
+                if (!result.IsSuccessStatusCode)
                 {
-                    await this.ReplyAsync("Couldn't communicate with Urban's API.").ConfigureAwait(false);
+                    await this.ReplyAsync("Couldn't communicate with UrbanDictionary API.").ConfigureAwait(false);
                     return;
                 }
 
-                var data = JToken.Parse(await client.Content.ReadAsStringAsync().ConfigureAwait(false)).ToObject<Urban>();
+                var data = JToken.Parse(await result.Content.ReadAsStringAsync().ConfigureAwait(false)).ToObject<Urban>();
                 if (!data.List.Any())
                 {
                     await this.ReplyAsync($"Couldn't find anything related to *{query}*.").ConfigureAwait(false);
                     return;
                 }
 
-                var termInfo = data.List[new Random().Next(0, data.List.Count)];
+                var termInfo = data.List.FirstOrDefault(); // .List[new Random().Next(0, data.List.Count)];
                 var embed = new EmbedBuilder()
                     .WithUrl("https://www.urbandictionary.com/define.php?term=" + query.Replace(' ', '+'))
                     .WithColor(new Color(255, 84, 33))
                     .WithCurrentTimestamp()
                     .WithAuthor("Urban Dictionary", "https://d2gatte9o95jao.cloudfront.net/assets/apple-touch-icon-55f1ee4ebfd5444ef5f8d5ba836a2d41.png", "https://urbandictionary.com")
                     .WithFooter($"Related Terms: {string.Join(", ", data.Tags)}" ?? "No related terms.")
-                    .AddField($"Definition of {termInfo.Word}", termInfo.Definition)
-                    .AddField("Example", termInfo.Example);
+                    .AddField($"Definition of {termInfo?.Word ?? query}", termInfo?.Definition ?? string.Empty)
+                    .AddField("Example", termInfo?.Example ?? string.Empty);
                 await this.ReplyAsync(string.Empty, embed: embed.Build()).ConfigureAwait(false);
             }
         }
@@ -87,14 +80,21 @@ namespace LennyBOT.Modules
         [Command("lmgtfy"), Remarks("Googles something for that special person who is crippled")]
         [MinPermissions(AccessLevel.User)]
         public Task LmgtfyAsync([Remainder] string search = "How to use Lmgtfy")
-            => this.ReplyAsync($"**Your special URL: **<http://lmgtfy.com/?q={ Uri.EscapeUriString(search) }>");
+            => this.ReplyAsync($"**Your special URL: **<http://lmgtfy.com/?q={ Uri.EscapeUriString(search)}>");
 
-        [Command("wiki"), Remarks("Searches wikipedia for your terms")]
+        [Command("wiki"), Remarks("Searches Wikipedia for your terms")]
         public async Task WikiAsync([Remainder]string search)
         {
             using (var client = new HttpClient())
             {
-                var getResult = await client.GetAsync($"https://en.wikipedia.org/w/api.php?action=opensearch&search={search}").ConfigureAwait(false);
+                var getResult = await client.GetAsync($"https://en.wikipedia.org/w/api.php?action=opensearch&search={ search}").ConfigureAwait(false);
+
+                if (!getResult.IsSuccessStatusCode)
+                {
+                    await this.ReplyAsync("Couldn't communicate with Wikipedia API.").ConfigureAwait(false);
+                    return;
+                }
+
                 var getContent = await getResult.Content.ReadAsStringAsync().ConfigureAwait(false);
                 dynamic responseObject = JsonConvert.DeserializeObject(getContent);
                 string title = responseObject[1][0];
@@ -129,8 +129,10 @@ namespace LennyBOT.Modules
             var embed = new EmbedBuilder().WithDescription($"{search.Plot}").WithUrl($"{search.Url}")
                 .WithColor(new Color(255, 0, 0)).WithCurrentTimestamp()
                 .WithThumbnailUrl("https://img.csfd.cz/documents/marketing/logos/logo-white-red/logo-white-red.svg")
-                .WithImageUrl($"{search.PosterUrl}").WithTitle($"{search.Title} ({search.Year}) {search.Rating}%")
-                .WithUrl($"{search.Url}").AddField("Žánry", $"{string.Join(", ", search.Genres)}").Build();
+                .WithImageUrl($"{search.PosterUrl}")
+                .WithTitle($"{search.Title} ({search.Year}) {search.Rating}%")
+                .WithUrl($"{search.Url}").AddField("Žánry", $"{string.Join(", ", search.Genres)}")
+                .Build();
             return this.ReplyAsync(string.Empty, false, embed);
         }
 
@@ -139,49 +141,7 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task ImdbCmdAsync([Remainder] string query)
         {
-            var config = AngleSharp.Configuration.Default.WithDefaultLoader();
-            var address = "http://www.imdb.com/find?s=tt&q=" + query.Replace(" ", "+");
-            var context = BrowsingContext.New(config);
-            var document = await context.OpenAsync(address).ConfigureAwait(false);
-            const string CellSelector = "td.result_text";
-            var cells = document.QuerySelectorAll(CellSelector).ToList();
-            var reply = string.Empty;
-            for (var i = 0; i < 4; i++)
-            {
-                var title = cells[i].TextContent.Trim(' ');
-                var url = "https://www.imdb.com" + cells[i].InnerHtml.Split('"')[1].Split('?')[0];
-
-                // -------- rating
-                var rating = string.Empty;
-                if (i == 0)
-                {
-                    var document2 = await context.OpenAsync(url).ConfigureAwait(false);
-                    var sourceText = document2.Source.Text;
-                    const string Searchtext = "<span itemprop=\"ratingValue\">";
-                    rating = SearchService.Extract(sourceText, Searchtext, "</span>");
-
-                    // ReSharper disable once StyleCop.SA1126
-                    if (!double.TryParse(rating.Replace('.', ','), out _))
-                    {
-                        rating = "N/A";
-                    }
-                    else
-                    {
-                        rating += "/10";
-                    }
-                }
-
-                // -------- */
-                if (i == 0)
-                {
-                    reply += $"{title} *Rating: {rating}*\n{url}\n\n**Other results:**\n";
-                }
-                else
-                {
-                    reply += $"{title}\n<{url}>\n";
-                }
-            }
-
+            var reply = await SearchService.SearchImdbAsync(query).ConfigureAwait(false);
             await this.ReplyAsync(reply).ConfigureAwait(false);
         }
 
@@ -200,16 +160,7 @@ namespace LennyBOT.Modules
             try
             {
                 var searchQuery = game;
-                var results = Query.Search(searchQuery);
-                /*var cost = string.Empty;
-                if (results[0].SaleType.ToString() == "FreeToPlay")
-                {
-                    cost = "Free!";
-                }
-                else
-                {
-                    cost = $"${results[0].PriceUSD}";
-                }*/
+                var results = SteamStoreQuery.Query.Search(searchQuery);
 
                 await this.Context.Channel.SendMessageAsync(results[0].StoreLink).ConfigureAwait(false);
             }
@@ -227,58 +178,8 @@ namespace LennyBOT.Modules
         {
             try
             {
-                var steamClient = new SteamClient(Config.Configuration.Load().SteamApiKey);
-                var userInfo = await steamClient.GetUsersInfoAsync(new List<string> { userId }).ConfigureAwait(false);
-                var userGames = await steamClient.OwnedGamesAsync(userId).ConfigureAwait(false);
-                var userRecent = await steamClient.RecentGamesAsync(userId).ConfigureAwait(false);
-
-                var info = userInfo.PlayersInfo.Players.FirstOrDefault();
-
-                string state;
-                switch (info?.ProfileState)
-                {
-                    case 0:
-                        state = "Offline";
-                        break;
-                    case 1:
-                        state = "Online";
-                        break;
-                    case 2:
-                        state = "Busy";
-                        break;
-                    case 3:
-                        state = "Away";
-                        break;
-                    case 4:
-                        state = "Snooze";
-                        break;
-                    case 5:
-                        state = "Looking to trade";
-                        break;
-                    case null:
-                        state = null;
-                        break;
-                    default:
-                        state = "Looking to play";
-                        break;
-                }
-
-                var embed = new EmbedBuilder()
-                    .WithColor(Color.DarkBlue)
-                    .WithThumbnailUrl(info?.AvatarFullUrl)
-                    .WithTitle(info?.RealName ?? info?.Name)
-                    .WithUrl(info?.ProfileLink)
-                    .WithCurrentTimestamp();
-                embed.AddField("Display Name", $"{info?.Name}", true);
-                embed.AddField("Status", state, true);
-                embed.AddField("Profile Created", SearchService.DateFromSeconds(info?.TimeCreated), true);
-                embed.AddField("Last Online", SearchService.DateFromSeconds(info?.LastLogOff), true);
-                embed.AddField("Country", $"{info?.Country ?? "No Country"}", true);
-                ////embed.AddField("Primary Clan ID", info.PrimaryClanId, true);
-                embed.AddField("Owned Games", userGames.OwnedGames.GamesCount, true);
-                embed.AddField("Recently Played Games", $"{userRecent.RecentGames.TotalCount}\n{string.Join(", ", userRecent.RecentGames.GamesList.Select(x => x.Name))}", true);
-
-                await this.ReplyAsync(string.Empty, embed: embed.Build()).ConfigureAwait(false);
+                var embed = await SearchService.SearchSteamUserAsync(userId).ConfigureAwait(false);
+                await this.ReplyAsync(string.Empty, embed: embed).ConfigureAwait(false);
             }
             catch
             {
@@ -299,6 +200,12 @@ namespace LennyBOT.Modules
             {
                 var result = await webClient.GetAsync($"http://csgobackpack.net/api/GetInventoryValue/?id={steamId64}")
                                  .ConfigureAwait(false);
+                if (!result.IsSuccessStatusCode)
+                {
+                    await this.ReplyAsync("Couldn't communicate with CSGOBackPack API.").ConfigureAwait(false);
+                    return;
+                }
+
                 var jsonContent = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var inventoryData = JsonConvert.DeserializeObject<dynamic>(jsonContent);
                 var messageContent = inventoryData.Success
@@ -321,6 +228,12 @@ namespace LennyBOT.Modules
                 {
                     var result = await webClient.GetAsync($"https://osu.ppy.sh/api/get_user?k={osuApiKey}&u={user}")
                                      .ConfigureAwait(false);
+                    if (!result.IsSuccessStatusCode)
+                    {
+                        await this.ReplyAsync("Couldn't communicate with Osu! API.").ConfigureAwait(false);
+                        return;
+                    }
+
                     var jsonContent = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
                     var osuDatas = JsonConvert.DeserializeObject<List<dynamic>>(jsonContent);
                     osuData = osuDatas.FirstOrDefault();
@@ -367,7 +280,6 @@ namespace LennyBOT.Modules
                 }
 
                 var jsonObj = JObject.Parse(await get.Content.ReadAsStringAsync().ConfigureAwait(false));
-                ////await this.ReplyAsync(jsonObj["value"].ToString()).ConfigureAwait(false);
                 var embedB = new EmbedBuilder()
                     .WithAuthor("Donald Trump", string.Empty, "https://www.tronalddump.io")
                     .WithTitle(string.Empty)
@@ -401,6 +313,22 @@ namespace LennyBOT.Modules
 
                 var jsonObj = JObject.Parse(await get.Content.ReadAsStringAsync().ConfigureAwait(false));
                 await this.ReplyAsync(jsonObj["joke"].ToString()).ConfigureAwait(false);
+            }
+        }
+
+        [Command("torrent", RunMode = RunMode.Async), Remarks("")]
+        public async Task TorrentAsync(params string[] keywords)
+        {
+            try
+            {
+                var embed = await SearchService.SearchTorrentsAsync(keywords).ConfigureAwait(false);
+
+                await this.ReplyAsync(string.Empty, false, embed).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                await this.ReplyAsync("Couldn't reach the server. Try again later").ConfigureAwait(false);
             }
         }
     }

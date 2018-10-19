@@ -1,5 +1,5 @@
 ﻿// ReSharper disable StyleCop.SA1600
-// ReSharper disable UnusedMember.Global
+/*/ ReSharper disable UnusedMember.Global
 namespace LennyBOT.Modules
 {
     using System;
@@ -85,6 +85,7 @@ namespace LennyBOT.Modules
                 var html = client.DownloadString("https://www.pornhub.com/video/search?search=" + query);
                 return this.ReplyAsync("");
             }
-        }*/
+        }*
     }
 }
+////*/

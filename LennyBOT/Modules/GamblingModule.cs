@@ -1,6 +1,6 @@
 ﻿// ReSharper disable StyleCop.SA1600
 // ReSharper disable UnusedMember.Global
-// ReSharper disable StyleCop.SA1126
+/*/ ReSharper disable StyleCop.SA1126
 namespace LennyBOT.Modules
 {
     using System.Linq;
@@ -145,3 +145,4 @@ namespace LennyBOT.Modules
         }
     }
 }
+////*/

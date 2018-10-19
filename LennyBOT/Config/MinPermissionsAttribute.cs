@@ -34,7 +34,7 @@ namespace LennyBOT.Config
         }
 
         // ReSharper disable once AsyncConverter.AsyncMethodNamingHighlighting
-        public override Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command, IServiceProvider services)
+        public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
             var access = GetPermission(context);            // Get the acccesslevel for this context
 
