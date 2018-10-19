@@ -125,7 +125,7 @@ namespace LennyBOT
 
             // Either search the program and add all Module classes that can be found.
             // Module classes *must* be marked 'public' or they will be ignored.
-            await this.commands.AddModulesAsync(Assembly.GetEntryAssembly()).ConfigureAwait(false);
+            await this.commands.AddModulesAsync(Assembly.GetEntryAssembly(), services).ConfigureAwait(false);
 
             // Or add Modules manually if you prefer to be a little more explicit:
             // await _commands.AddModuleAsync<SomeModule>();
