@@ -147,7 +147,7 @@ namespace LennyBOT
             var msg = arg as SocketUserMessage;
             if (msg == null)
             {
-                Console.WriteLine("not SocketUserMsg);
+                Console.WriteLine("not SocketUserMsg");
                 return;
             }
 
