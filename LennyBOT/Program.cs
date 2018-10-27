@@ -99,7 +99,7 @@ namespace LennyBOT
             Configuration.EnsureExists();
 
             // Login and connect.
-            Console.WriteLine(Configuration.Load().Token);
+            Console.WriteLine($"prefix: {prefix}");
             await this.client.LoginAsync(TokenType.Bot, Configuration.Load().Token).ConfigureAwait(false);
             await this.client.StartAsync().ConfigureAwait(false);
 
@@ -155,7 +155,6 @@ namespace LennyBOT
             var pos = 0;
 
             var prefix = Configuration.Load().Prefix;
-            Console.WriteLine($"prefix: {prefix}");
             if (msg.HasCharPrefix(prefix, ref pos) || msg.HasMentionPrefix(this.client.CurrentUser, ref pos))
             {
                 // Create a Command Context.
@@ -166,7 +165,8 @@ namespace LennyBOT
                 // rather an object stating if the command executed succesfully).
                 Console.WriteLine("execCmd");
                 var result = await this.commands.ExecuteAsync(context, pos, this.services).ConfigureAwait(false);
-
+                Console.WriteLine($"result.Error.HasValue={result.Error.HasValue}\nresult.Error.Value={result.Error.Value}");
+                Console.WriteLine(result.ToString());
                 // Uncomment the following lines if you want the bot
                 // to send a message if it failed (not advised for most situations).
                 // if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
