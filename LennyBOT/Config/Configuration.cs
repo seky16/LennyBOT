@@ -58,7 +58,7 @@ namespace LennyBOT.Config
                 config.SaveJson();                                  // Save the new configuration object to file.
             }
 
-            Console.WriteLine("Configuration Loaded");
+            Console.WriteLine($"Configuration Loaded {file}");
         }
 
         /// <summary>
