@@ -99,7 +99,7 @@ namespace LennyBOT
             Configuration.EnsureExists();
 
             // Login and connect.
-            Console.WriteLine($"prefix: {prefix}");
+            Console.WriteLine($"prefix: {Configuration.Load().Prefix}");
             await this.client.LoginAsync(TokenType.Bot, Configuration.Load().Token).ConfigureAwait(false);
             await this.client.StartAsync().ConfigureAwait(false);
 
