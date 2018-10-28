@@ -99,6 +99,7 @@ namespace LennyBOT
             Configuration.EnsureExists();
 
             // Login and connect.
+            Console.WriteLine($"prefix: {Configuration.Load().Prefix}");
             await this.client.LoginAsync(TokenType.Bot, Configuration.Load().Token);
             await this.client.StartAsync();
 
@@ -111,6 +112,7 @@ namespace LennyBOT
             // Repeat this for all the service classes
             // and other dependencies that your commands might need.
             // _map.AddSingleton(new SomeServiceClass());
+            Console.WriteLine("add services");
             this.map.AddSingleton(this.client);
             this.map.AddSingleton(new FactService());
             this.map.AddSingleton(new ShekelsService());
@@ -121,26 +123,31 @@ namespace LennyBOT
             // When all your required services are in the collection, build the container.
             // Tip: There's an overload taking in a 'validateScopes' bool to make sure
             // you haven't made any mistakes in your dependency graph.
+            Console.WriteLine("build services");
             this.services = this.map.BuildServiceProvider();
 
             // Either search the program and add all Module classes that can be found.
             // Module classes *must* be marked 'public' or they will be ignored.
+            Console.WriteLine("add modules");
             await this.commands.AddModulesAsync(Assembly.GetEntryAssembly(), services);
 
             // Or add Modules manually if you prefer to be a little more explicit:
             // await _commands.AddModuleAsync<SomeModule>();
 
             // Subscribe a handler to see if a message invokes a command.
+            Console.WriteLine("subscribe");
             this.client.MessageReceived += this.HandleCommandAsync;
         }
 
         private async Task HandleCommandAsync(SocketMessage arg)
         {
+            Console.WriteLine("Got socket msg");
             // Bail out if it's a System Message.
             // ReSharper disable once UsePatternMatching
             var msg = arg as SocketUserMessage;
             if (msg == null)
             {
+                Console.WriteLine("not SocketUserMsg");
                 return;
             }
 
@@ -151,11 +158,15 @@ namespace LennyBOT
             if (msg.HasCharPrefix(prefix, ref pos) || msg.HasMentionPrefix(this.client.CurrentUser, ref pos))
             {
                 // Create a Command Context.
+                Console.WriteLine("create ctxt");
                 var context = new SocketCommandContext(this.client, msg);
 
                 // Execute the command. (result does not indicate a return value,
                 // rather an object stating if the command executed succesfully).
+                Console.WriteLine("execCmd");
                 var result = await this.commands.ExecuteAsync(context, pos, this.services);
+                Console.WriteLine($"result.Error.HasValue={result.Error.HasValue}\nresult.Error.Value={result.Error.Value}");
+                Console.WriteLine(result.ToString());
 
                 // Uncomment the following lines if you want the bot
                 // to send a message if it failed (not advised for most situations).
@@ -163,11 +174,13 @@ namespace LennyBOT
                 // await msg.Channel.SendMessageAsync(result.ErrorReason);
                 if (result.Error.HasValue && result.Error.Value == CommandError.UnknownCommand)
                 {
+                    Console.WriteLine("hasValue && value==unknown");
                     return;
                 }
 
                 if (result.Error.HasValue && result.Error.Value != CommandError.UnknownCommand)
                 {
+                    Console.WriteLine("sendMsg");
                     await context.Channel.SendMessageAsync(result.ToString());
                 }
 
