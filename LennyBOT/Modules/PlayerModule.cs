@@ -24,16 +24,16 @@
         [MinPermissions(AccessLevel.BotOwner)]
         public async Task PlayCmdAsync()
         {
-            await this.shekels.DownloadAsync(this.Context).ConfigureAwait(false);
+            await this.shekels.DownloadAsync(this.Context);
             var p = this.shekels.GetPlayer(123);
 
             // await _service.Upload(Context, Export());
             p.AddShekels(10);
             this.shekels.AddOrUpdatePlayer(p);
-            await ShekelsService.UploadAsync(this.Context, this.shekels.Export()).ConfigureAwait(false);
+            await ShekelsService.UploadAsync(this.Context, this.shekels.Export());
             p.RemoveShekels(5);
             this.shekels.AddOrUpdatePlayer(p);
-            await ShekelsService.UploadAsync(this.Context, this.shekels.Export()).ConfigureAwait(false);
+            await ShekelsService.UploadAsync(this.Context, this.shekels.Export());
 
             // await ReplyAsync($"id: {p.Id}; \nshekels: {p.Shekels};");
             // p.RemoveShekels(5);

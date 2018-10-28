@@ -38,7 +38,7 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task InfoCmdAsync()
         {
-            var app = await this.Context.Client.GetApplicationInfoAsync().ConfigureAwait(false);
+            var app = await this.Context.Client.GetApplicationInfoAsync();
 
             await this.ReplyAsync(
                 $"{Format.Bold("Info")}\n"
@@ -53,7 +53,7 @@ namespace LennyBOT.Modules
                 + $"- Guilds: {this.Context.Client.Guilds.Count}\n"
                 + $"- Channels: {this.Context.Client.Guilds.Sum(g => g.Channels.Count)}\n"
                 + $"- Users: {this.Context.Client.Guilds.Sum(g => g.Users.Count)}\n")
-                .ConfigureAwait(false);
+                ;
         }
 
         /*[Command("debug")]
@@ -91,7 +91,7 @@ namespace LennyBOT.Modules
 
                     foreach (var cmd in module.Commands)
                     {
-                        var result = await cmd.CheckPreconditionsAsync(this.Context).ConfigureAwait(false);
+                        var result = await cmd.CheckPreconditionsAsync(this.Context);
                         if (!result.IsSuccess)
                         {
                             continue;
@@ -118,7 +118,7 @@ namespace LennyBOT.Modules
                     }
                 }
 
-                await this.ReplyAsync(string.Empty, false, builder.Build()).ConfigureAwait(false);
+                await this.ReplyAsync(string.Empty, false, builder.Build());
             }
             else
             {
@@ -126,7 +126,7 @@ namespace LennyBOT.Modules
 
                 if (!result.IsSuccess)
                 {
-                    await this.ReplyAsync($"Sorry, I couldn't find a command like **{command}**.").ConfigureAwait(false);
+                    await this.ReplyAsync($"Sorry, I couldn't find a command like **{command}**.");
                     return;
                 }
 
@@ -155,7 +155,7 @@ namespace LennyBOT.Modules
                             });
                 }
 
-                await this.ReplyAsync(string.Empty, false, builder.Build()).ConfigureAwait(false);
+                await this.ReplyAsync(string.Empty, false, builder.Build());
             }
         }
 
@@ -214,16 +214,16 @@ namespace LennyBOT.Modules
                 .WithTitle($"INFORMATION | {this.Context.Guild.Name}");
             var guild = this.Context.Guild as IGuild;
             embed.AddField("ID", this.Context.Guild.Id, true);
-            embed.AddField("Owner", await guild.GetOwnerAsync().ConfigureAwait(false), true);
-            embed.AddField("Default Channel", await guild.GetDefaultChannelAsync().ConfigureAwait(false), true);
+            embed.AddField("Owner", await guild.GetOwnerAsync(), true);
+            embed.AddField("Default Channel", await guild.GetDefaultChannelAsync(), true);
             embed.AddField("Voice Region", this.Context.Guild.VoiceRegionId, true);
             embed.AddField("Created At", this.Context.Guild.CreatedAt.ToPragueTimeString(), true);
             embed.AddField("Roles", $"{this.Context.Guild.Roles.Count }\n{string.Join(", ", this.Context.Guild.Roles.OrderByDescending(x => x.Position))}", true);
-            embed.AddField("Users", (await guild.GetUsersAsync().ConfigureAwait(false)).Count(x => x.IsBot == false), true);
-            embed.AddField("Bots", (await guild.GetUsersAsync().ConfigureAwait(false)).Count(x => x.IsBot), true);
+            embed.AddField("Users", (await guild.GetUsersAsync()).Count(x => x.IsBot == false), true);
+            embed.AddField("Bots", (await guild.GetUsersAsync()).Count(x => x.IsBot), true);
             embed.AddField("Text Channels", this.Context.Guild.TextChannels.Count, true);
             embed.AddField("Voice Channels", this.Context.Guild.VoiceChannels.Count, true);
-            await this.ReplyAsync(string.Empty, false, embed.Build()).ConfigureAwait(false);
+            await this.ReplyAsync(string.Empty, false, embed.Build());
         }
 
         [Command("roleinfo"), Alias("ri"), Remarks("Displays information about a role.")]

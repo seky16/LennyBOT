@@ -12,10 +12,10 @@ namespace LennyBOT.Extensions
         {
             Task.Run(async () =>
                 {
-                    await Task.Delay(seconds * 1000).ConfigureAwait(false);
+                    await Task.Delay(seconds * 1000);
                     try
                     {
-                        await msg.DeleteAsync().ConfigureAwait(false);
+                        await msg.DeleteAsync();
                     }
                     catch
                     {
@@ -29,10 +29,10 @@ namespace LennyBOT.Extensions
         {
             Task.Run(async () =>
                 {
-                    await Task.Delay(seconds * 1000).ConfigureAwait(false);
+                    await Task.Delay(seconds * 1000);
                     try
                     {
-                        await msg.ModifyAsync(x => x.Content = message).ConfigureAwait(false);
+                        await msg.ModifyAsync(x => x.Content = message);
                     }
                     catch
                     {

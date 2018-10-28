@@ -60,11 +60,11 @@ namespace LennyBOT.Modules
         {
             if (number <= 0)
             {
-                await this.ReplyAsync("Number of throws cannot be less or equal than 0.").ConfigureAwait(false);
+                await this.ReplyAsync("Number of throws cannot be less or equal than 0.");
             }
             else if (sides <= 0)
             {
-                await this.ReplyAsync("Number of sides cannot be less or equal than 0").ConfigureAwait(false);
+                await this.ReplyAsync("Number of sides cannot be less or equal than 0");
             }
             else
             {
@@ -77,7 +77,7 @@ namespace LennyBOT.Modules
                     sum += roll;
                 }
 
-                await this.ReplyAsync($"Rolled:{res}\nSum: {sum}").ConfigureAwait(false);
+                await this.ReplyAsync($"Rolled:{res}\nSum: {sum}");
             }
         }
     }

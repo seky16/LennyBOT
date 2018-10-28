@@ -35,17 +35,17 @@ namespace LennyBOT.Modules
             using (var client = new HttpClient())
             {
                 var result = await client.GetAsync(
-                                 $"http://api.urbandictionary.com/v0/define?term={query.Replace(' ', '+')}").ConfigureAwait(false);
+                                 $"http://api.urbandictionary.com/v0/define?term={query.Replace(' ', '+')}");
                 if (!result.IsSuccessStatusCode)
                 {
-                    await this.ReplyAsync("Couldn't communicate with UrbanDictionary API.").ConfigureAwait(false);
+                    await this.ReplyAsync("Couldn't communicate with UrbanDictionary API.");
                     return;
                 }
 
-                var data = JToken.Parse(await result.Content.ReadAsStringAsync().ConfigureAwait(false)).ToObject<Urban>();
+                var data = JToken.Parse(await result.Content.ReadAsStringAsync()).ToObject<Urban>();
                 if (!data.List.Any())
                 {
-                    await this.ReplyAsync($"Couldn't find anything related to *{query}*.").ConfigureAwait(false);
+                    await this.ReplyAsync($"Couldn't find anything related to *{query}*.");
                     return;
                 }
 
@@ -58,7 +58,7 @@ namespace LennyBOT.Modules
                     .WithFooter($"Related Terms: {string.Join(", ", data.Tags)}" ?? "No related terms.")
                     .AddField($"Definition of {termInfo?.Word ?? query}", termInfo?.Definition ?? string.Empty)
                     .AddField("Example", termInfo?.Example ?? string.Empty);
-                await this.ReplyAsync(string.Empty, embed: embed.Build()).ConfigureAwait(false);
+                await this.ReplyAsync(string.Empty, embed: embed.Build());
             }
         }
 
@@ -87,15 +87,15 @@ namespace LennyBOT.Modules
         {
             using (var client = new HttpClient())
             {
-                var getResult = await client.GetAsync($"https://en.wikipedia.org/w/api.php?action=opensearch&search={ search}").ConfigureAwait(false);
+                var getResult = await client.GetAsync($"https://en.wikipedia.org/w/api.php?action=opensearch&search={ search}");
 
                 if (!getResult.IsSuccessStatusCode)
                 {
-                    await this.ReplyAsync("Couldn't communicate with Wikipedia API.").ConfigureAwait(false);
+                    await this.ReplyAsync("Couldn't communicate with Wikipedia API.");
                     return;
                 }
 
-                var getContent = await getResult.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var getContent = await getResult.Content.ReadAsStringAsync();
                 dynamic responseObject = JsonConvert.DeserializeObject(getContent);
                 string title = responseObject[1][0];
                 string firstParagraph = responseObject[2][0];
@@ -109,11 +109,11 @@ namespace LennyBOT.Modules
 
                 if (string.IsNullOrWhiteSpace(firstParagraph))
                 {
-                    await this.ReplyAsync("No results found.").ConfigureAwait(false);
+                    await this.ReplyAsync("No results found.");
                 }
                 else
                 {
-                    await this.ReplyAsync($"{title}: {url}\n**See also:**\n{builder}").ConfigureAwait(false);
+                    await this.ReplyAsync($"{title}: {url}\n**See also:**\n{builder}");
                 }
             }
         }
@@ -141,8 +141,8 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task ImdbCmdAsync([Remainder] string query)
         {
-            var reply = await SearchService.SearchImdbAsync(query).ConfigureAwait(false);
-            await this.ReplyAsync(reply).ConfigureAwait(false);
+            var reply = await SearchService.SearchImdbAsync(query);
+            await this.ReplyAsync(reply);
         }
 
         [Command("steam game", RunMode = RunMode.Async)]
@@ -153,7 +153,7 @@ namespace LennyBOT.Modules
         {
             if (game == null)
             {
-                await this.Context.Channel.SendMessageAsync("`Enter a game name`").ConfigureAwait(false);
+                await this.Context.Channel.SendMessageAsync("`Enter a game name`");
                 return;
             }
 
@@ -162,11 +162,11 @@ namespace LennyBOT.Modules
                 var searchQuery = game;
                 var results = SteamStoreQuery.Query.Search(searchQuery);
 
-                await this.Context.Channel.SendMessageAsync(results[0].StoreLink).ConfigureAwait(false);
+                await this.Context.Channel.SendMessageAsync(results[0].StoreLink);
             }
             catch
             {
-                await this.Context.Channel.SendMessageAsync("`Could not find game`").ConfigureAwait(false);
+                await this.Context.Channel.SendMessageAsync("`Could not find game`");
             }
         }
 
@@ -178,14 +178,14 @@ namespace LennyBOT.Modules
         {
             try
             {
-                var embed = await SearchService.SearchSteamUserAsync(userId).ConfigureAwait(false);
-                await this.ReplyAsync(string.Empty, embed: embed).ConfigureAwait(false);
+                var embed = await SearchService.SearchSteamUserAsync(userId);
+                await this.ReplyAsync(string.Empty, embed: embed);
             }
             catch
             {
                 await this.ReplyAsync(
                         "**Error** \nAre you sure you entered a correct steamID?\nYou can get steamID here: <http://steamidfinder.com/>. Use *steamID64*")
-                    .ConfigureAwait(false);
+                    ;
             }
         }
 
@@ -199,19 +199,19 @@ namespace LennyBOT.Modules
             using (var webClient = new HttpClient())
             {
                 var result = await webClient.GetAsync($"http://csgobackpack.net/api/GetInventoryValue/?id={steamId64}")
-                                 .ConfigureAwait(false);
+                                 ;
                 if (!result.IsSuccessStatusCode)
                 {
-                    await this.ReplyAsync("Couldn't communicate with CSGOBackPack API.").ConfigureAwait(false);
+                    await this.ReplyAsync("Couldn't communicate with CSGOBackPack API.");
                     return;
                 }
 
-                var jsonContent = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var jsonContent = await result.Content.ReadAsStringAsync();
                 var inventoryData = JsonConvert.DeserializeObject<dynamic>(jsonContent);
                 var messageContent = inventoryData.Success
                                          ? $"**Player:** {steamId64}\n**Inventory value:** {inventoryData.Value} {inventoryData.Currency}\n**Items:** {inventoryData.Items}"
                                          : "**Error** \nAre you sure you entered a correct steamID?\nYou can get steamID here: <http://steamidfinder.com/>. Use *steamID64*";
-                await this.ReplyAsync(messageContent).ConfigureAwait(false);
+                await this.ReplyAsync(messageContent);
             }
         }
 
@@ -227,14 +227,14 @@ namespace LennyBOT.Modules
                 using (var webClient = new HttpClient())
                 {
                     var result = await webClient.GetAsync($"https://osu.ppy.sh/api/get_user?k={osuApiKey}&u={user}")
-                                     .ConfigureAwait(false);
+                                     ;
                     if (!result.IsSuccessStatusCode)
                     {
-                        await this.ReplyAsync("Couldn't communicate with Osu! API.").ConfigureAwait(false);
+                        await this.ReplyAsync("Couldn't communicate with Osu! API.");
                         return;
                     }
 
-                    var jsonContent = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var jsonContent = await result.Content.ReadAsStringAsync();
                     var osuDatas = JsonConvert.DeserializeObject<List<dynamic>>(jsonContent);
                     osuData = osuDatas.FirstOrDefault();
                 }
@@ -259,11 +259,11 @@ namespace LennyBOT.Modules
                         "Rank",
                         $"```json\nSS: {osuData?.Count_rank_ss}\n S: {osuData?.Count_rank_s}\n A: {osuData?.Count_rank_a}```",
                         true).Build();
-                await this.ReplyAsync(string.Empty, false, embed).ConfigureAwait(false);
+                await this.ReplyAsync(string.Empty, false, embed);
             }
             catch (Exception)
             {
-                await this.ReplyAsync("`Cannot find osu user`").ConfigureAwait(false);
+                await this.ReplyAsync("`Cannot find osu user`");
             }
         }
 
@@ -272,14 +272,14 @@ namespace LennyBOT.Modules
         {
             using (var client = new HttpClient())
             {
-                var get = await client.GetAsync("https://api.tronalddump.io/random/quote").ConfigureAwait(false);
+                var get = await client.GetAsync("https://api.tronalddump.io/random/quote");
                 if (!get.IsSuccessStatusCode)
                 {
-                    await this.ReplyAsync("Using TrumpDump API was the worse trade deal, maybe ever.").ConfigureAwait(false);
+                    await this.ReplyAsync("Using TrumpDump API was the worse trade deal, maybe ever.");
                     return;
                 }
 
-                var jsonObj = JObject.Parse(await get.Content.ReadAsStringAsync().ConfigureAwait(false));
+                var jsonObj = JObject.Parse(await get.Content.ReadAsStringAsync());
                 var embedB = new EmbedBuilder()
                     .WithAuthor("Donald Trump", string.Empty, "https://www.tronalddump.io")
                     .WithTitle(string.Empty)
@@ -295,7 +295,7 @@ namespace LennyBOT.Modules
                     embedB.Timestamp = timestamp;
                 }
 
-                await this.ReplyAsync(string.Empty, false, embedB.Build()).ConfigureAwait(false);
+                await this.ReplyAsync(string.Empty, false, embedB.Build());
             }
         }
 
@@ -304,15 +304,15 @@ namespace LennyBOT.Modules
         {
             using (var client = new HttpClient())
             {
-                var get = await client.GetAsync("http://api.yomomma.info/").ConfigureAwait(false);
+                var get = await client.GetAsync("http://api.yomomma.info/");
                 if (!get.IsSuccessStatusCode)
                 {
-                    await this.ReplyAsync("Yo mama so fat she crashed Yomomma's API.").ConfigureAwait(false);
+                    await this.ReplyAsync("Yo mama so fat she crashed Yomomma's API.");
                     return;
                 }
 
-                var jsonObj = JObject.Parse(await get.Content.ReadAsStringAsync().ConfigureAwait(false));
-                await this.ReplyAsync(jsonObj["joke"].ToString()).ConfigureAwait(false);
+                var jsonObj = JObject.Parse(await get.Content.ReadAsStringAsync());
+                await this.ReplyAsync(jsonObj["joke"].ToString());
             }
         }
 
@@ -321,14 +321,14 @@ namespace LennyBOT.Modules
         {
             try
             {
-                var embed = await SearchService.SearchTorrentsAsync(keywords).ConfigureAwait(false);
+                var embed = await SearchService.SearchTorrentsAsync(keywords);
 
-                await this.ReplyAsync(string.Empty, false, embed).ConfigureAwait(false);
+                await this.ReplyAsync(string.Empty, false, embed);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                await this.ReplyAsync("Couldn't reach the server. Try again later").ConfigureAwait(false);
+                await this.ReplyAsync("Couldn't reach the server. Try again later");
             }
         }
     }

@@ -35,7 +35,7 @@ namespace LennyBOT.Services
             var config = Configuration.Default.WithDefaultLoader();
             var address = "http://www.imdb.com/find?s=tt&q=" + query.Replace(" ", "+");
             var context = BrowsingContext.New(config);
-            var document = await context.OpenAsync(address).ConfigureAwait(false);
+            var document = await context.OpenAsync(address);
             const string CellSelector = "td.result_text";
             var cells = document.QuerySelectorAll(CellSelector).ToList();
             var reply = string.Empty;
@@ -48,7 +48,7 @@ namespace LennyBOT.Services
                 var rating = string.Empty;
                 if (i == 0)
                 {
-                    var document2 = await context.OpenAsync(url).ConfigureAwait(false);
+                    var document2 = await context.OpenAsync(url);
                     var sourceText = document2.Source.Text;
                     const string Searchtext = "<span itemprop=\"ratingValue\">";
                     rating = SearchService.Extract(sourceText, Searchtext, "</span>");
@@ -81,9 +81,9 @@ namespace LennyBOT.Services
         public static async Task<Embed> SearchSteamUserAsync(string userId)
         {
             var steamClient = new SteamClient(Config.Configuration.Load().SteamApiKey);
-            var userInfo = await steamClient.GetUsersInfoAsync(new List<string> { userId }).ConfigureAwait(false);
-            var userGames = await steamClient.OwnedGamesAsync(userId).ConfigureAwait(false);
-            var userRecent = await steamClient.RecentGamesAsync(userId).ConfigureAwait(false);
+            var userInfo = await steamClient.GetUsersInfoAsync(new List<string> { userId });
+            var userGames = await steamClient.OwnedGamesAsync(userId);
+            var userRecent = await steamClient.RecentGamesAsync(userId);
 
             var info = userInfo.PlayersInfo.Players.FirstOrDefault();
 
@@ -139,7 +139,7 @@ namespace LennyBOT.Services
 
             var config = Configuration.Default.WithDefaultLoader();
             var context = BrowsingContext.New(config);
-            var document = await context.OpenAsync(url).ConfigureAwait(false);
+            var document = await context.OpenAsync(url);
             var rows = document.QuerySelectorAll("dl").ToList();
 
             var builder = new EmbedBuilder()

@@ -34,7 +34,7 @@ namespace LennyBOT.Services
         {
             get
             {
-                this.DownloadAsync().ConfigureAwait(false);
+                this.DownloadAsync();
                 return this.players;
             }
         }*/
@@ -44,15 +44,15 @@ namespace LennyBOT.Services
             var channel = this.Context.Guild.Channels.FirstOrDefault(ch => ch.Name.ToLowerInvariant() == "shekels") as SocketTextChannel;
             if (channel == null)
             {
-                await this.Context.Message.AddReactionAsync(EmojiExtensions.FromText("no_entry")).ConfigureAwait(false);
+                await this.Context.Message.AddReactionAsync(EmojiExtensions.FromText("no_entry"));
                 return null;
             }
 
-            var msg = await channel.GetLastMessageAsync().ConfigureAwait(false);
+            var msg = await channel.GetLastMessageAsync();
             var str = msg.Content;
             var sr = new StringReader(str);
             string s;
-            while ((s = await sr.ReadLineAsync().ConfigureAwait(false)) != null)
+            while ((s = await sr.ReadLineAsync()) != null)
             {
                 var split = s.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
 
@@ -94,11 +94,11 @@ namespace LennyBOT.Services
             var channel = this.Context.Guild.Channels.FirstOrDefault(ch => ch.Name.ToLowerInvariant() == "shekels") as SocketTextChannel;
             if (channel == null)
             {
-                await this.Context.Message.AddReactionAsync(EmojiExtensions.FromText("no_entry")).ConfigureAwait(false);
+                await this.Context.Message.AddReactionAsync(EmojiExtensions.FromText("no_entry"));
                 return;
             }
 
-            var msg = await channel.GetLastMessageAsync().ConfigureAwait(false) as SocketUserMessage;
+            var msg = await channel.GetLastMessageAsync() as SocketUserMessage;
 
             var stringBuilder = new StringBuilder();
             foreach (var player in this.players)
@@ -108,11 +108,11 @@ namespace LennyBOT.Services
 
             if (msg != null && msg.Author.Id == this.Context.Client.CurrentUser.Id)
             {
-                await msg.ModifyAsync(m => m.Content = stringBuilder.ToString()).ConfigureAwait(false);
+                await msg.ModifyAsync(m => m.Content = stringBuilder.ToString());
             }
             else
             {
-                await channel.SendMessageAsync(stringBuilder.ToString()).ConfigureAwait(false);
+                await channel.SendMessageAsync(stringBuilder.ToString());
             }
         }
 
@@ -125,7 +125,7 @@ namespace LennyBOT.Services
 
         private async Task<Player> GetPlayerAsync(ulong id)
         {
-            var playersList = await this.DownloadAsync().ConfigureAwait(false);
+            var playersList = await this.DownloadAsync();
             return playersList.FirstOrDefault(p => p.Id == id) ?? new Player(id, 0);
         }
 
@@ -166,11 +166,11 @@ namespace LennyBOT.Services
             var channel = context.Guild.Channels.FirstOrDefault(ch => ch.Name.ToLowerInvariant() == "shekels") as SocketTextChannel;
             if (channel == null)
             {
-                await context.Message.ReactAsync(EmojiExtensions.FromText("no_entry")).ConfigureAwait(false);
+                await context.Message.ReactAsync(EmojiExtensions.FromText("no_entry"));
                 return;
             }
 
-            var msgEnum = await channel.GetMessagesAsync(1).Flatten().ConfigureAwait(false);
+            var msgEnum = await channel.GetMessagesAsync(1).Flatten();
             var msg = msgEnum.FirstOrDefault();
             this.Import(msg);
         }

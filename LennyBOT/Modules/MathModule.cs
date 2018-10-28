@@ -35,21 +35,21 @@ namespace LennyBOT.Modules
 
             using (var client = new HttpClient())
             {
-                var get = await client.GetAsync(url).ConfigureAwait(false);
+                var get = await client.GetAsync(url);
                 if (!get.IsSuccessStatusCode)
                 {
-                    await this.ReplyAsync("http://api.mathjs.org/ couldn't be reached.").ConfigureAwait(false);
+                    await this.ReplyAsync("http://api.mathjs.org/ couldn't be reached.");
                     return;
                 }
 
-                var result = await get.Content.ReadAsStringAsync().ConfigureAwait(false);
-                await this.ReplyAsync($"`{expression} = {result}`").ConfigureAwait(false);
+                var result = await get.Content.ReadAsStringAsync();
+                await this.ReplyAsync($"`{expression} = {result}`");
             }
 
             /*catch (Exception)
             {
-                ////await this.ReplyAsync("```fix\nSomething went wrong```").ConfigureAwait(false);
-                await this.ReactAsync(Fail).ConfigureAwait(false);
+                ////await this.ReplyAsync("```fix\nSomething went wrong```");
+                await this.ReactAsync(Fail);
             }*/
         }
 
@@ -61,20 +61,20 @@ namespace LennyBOT.Modules
             amount = amount.Replace(',', '.');
             if (!double.TryParse(amount, out var amountD))
             {
-                await this.ReactAsync(EmojiExtensions.FromText(":question:")).ConfigureAwait(false);
+                await this.ReactAsync(EmojiExtensions.FromText(":question:"));
                 return;
             }
 
             var author = this.Context.Message.Author as SocketGuildUser;
             var nick = author?.Nickname ?? this.Context.Message.Author.Username;
-            var result = await Fixer.ConvertAsync(from, to, amountD).ConfigureAwait(false);
+            var result = await Fixer.ConvertAsync(from, to, amountD);
             result = Math.Round(result, 2);
             var builder = new EmbedBuilder()
                 .WithColor(Color.DarkGreen)
                 .WithAuthor(new EmbedAuthorBuilder().WithName(nick ?? string.Empty).WithIconUrl(author?.GetAvatarUrl() ?? string.Empty))
                 .WithCurrentTimestamp()
                 .WithDescription($"{amountD.ToString(CultureInfo.InvariantCulture)} {from.ToUpper()} = **{result.ToString(CultureInfo.InvariantCulture)} {to.ToUpper()}**");
-            await this.ReplyAsync(string.Empty, false, builder.Build()).ConfigureAwait(false);
+            await this.ReplyAsync(string.Empty, false, builder.Build());
         }
 
         [Command("convert", RunMode = RunMode.Sync), Alias("conv")]
@@ -82,27 +82,27 @@ namespace LennyBOT.Modules
         {
             if (bullshitCheck.ToLowerInvariant() != "to")
             {
-                await this.ReactAsync(EmojiExtensions.FromText(":question:")).ConfigureAwait(false);
+                await this.ReactAsync(EmojiExtensions.FromText(":question:"));
                 return;
             }
 
             amount = amount.Replace(',', '.');
             if (!double.TryParse(amount, out var amountD))
             {
-                await this.ReactAsync(EmojiExtensions.FromText(":question:")).ConfigureAwait(false);
+                await this.ReactAsync(EmojiExtensions.FromText(":question:"));
                 return;
             }
 
             var author = this.Context.Message.Author as SocketGuildUser;
             var nick = author?.Nickname ?? this.Context.Message.Author.Username;
-            var result = await Fixer.ConvertAsync(from, to, amountD).ConfigureAwait(false);
+            var result = await Fixer.ConvertAsync(from, to, amountD);
             result = Math.Round(result, 2);
             var builder = new EmbedBuilder()
                 .WithColor(Color.DarkGreen)
                 .WithAuthor(new EmbedAuthorBuilder().WithName(nick ?? string.Empty).WithIconUrl(author?.GetAvatarUrl() ?? string.Empty))
                 .WithCurrentTimestamp()
                 .WithDescription($"{amountD.ToString(CultureInfo.InvariantCulture)} {from.ToUpper()} = **{result.ToString(CultureInfo.InvariantCulture)} {to.ToUpper()}**");
-            await this.ReplyAsync(string.Empty, false, builder.Build()).ConfigureAwait(false);
+            await this.ReplyAsync(string.Empty, false, builder.Build());
         }
     }
 }

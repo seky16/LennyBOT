@@ -24,8 +24,8 @@ namespace LennyBOT.Modules
             {
                 var token = JArray.Parse(
                     await client.GetStringAsync($"http://api.oboobs.ru/boobs/{new Random().Next(0, 10229)}")
-                        .ConfigureAwait(false))[0];
-                await this.ReplyAsync($"http://media.oboobs.ru/{token["preview"].ToString()}").ConfigureAwait(false);
+                        )[0];
+                await this.ReplyAsync($"http://media.oboobs.ru/{token["preview"].ToString()}");
             }
         }
 
@@ -35,8 +35,8 @@ namespace LennyBOT.Modules
             using (var client = new HttpClient())
             {
                 var token = JArray.Parse(
-                    await client.GetStringAsync($"http://api.obutts.ru/butts/{new Random().Next(0, 4963)}").ConfigureAwait(false))[0];
-                await this.ReplyAsync($"http://media.obutts.ru/{token["preview"].ToString()}").ConfigureAwait(false);
+                    await client.GetStringAsync($"http://api.obutts.ru/butts/{new Random().Next(0, 4963)}"))[0];
+                await this.ReplyAsync($"http://media.obutts.ru/{token["preview"].ToString()}");
             }
         }
 
@@ -48,18 +48,18 @@ namespace LennyBOT.Modules
                 var response = await client
                                    .GetAsync(
                                        $"http://api.porn.com/videos/find.json?search={Uri.EscapeDataString(search)}")
-                                   .ConfigureAwait(false);
+                                   ;
                 if (!response.IsSuccessStatusCode)
                 {
-                    await this.ReplyAsync(response.ReasonPhrase).ConfigureAwait(false);
+                    await this.ReplyAsync(response.ReasonPhrase);
                     return;
                 }
 
                 var convertJson = JsonConvert.DeserializeObject<Porn>(
-                    await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                    await response.Content.ReadAsStringAsync());
                 if (!convertJson.IsSuccess)
                 {
-                    await this.ReplyAsync("No results found!").ConfigureAwait(false);
+                    await this.ReplyAsync("No results found!");
                     return;
                 }
 
@@ -70,7 +70,7 @@ namespace LennyBOT.Modules
                     .WithFooter($"Total Results: {convertJson.Count}");
                 embed.AddField("Video Length", time, true);
                 embed.AddField("Total Views", getvid.Views, true);
-                await this.ReplyAsync(string.Empty, embed: embed.Build()).ConfigureAwait(false);
+                await this.ReplyAsync(string.Empty, embed: embed.Build());
             }
         }
 

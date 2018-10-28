@@ -28,7 +28,7 @@ namespace LennyBOT.Services
         {
             var randomFactIndex = RandomService.Generate(0, this.numOfFacts - 1);
             var factToPost = this.randomFacts[randomFactIndex];
-            await Task.Delay(0).ConfigureAwait(false);
+            await Task.Delay(0);
             return factToPost;
         }
     }

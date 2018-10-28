@@ -32,8 +32,8 @@ namespace LennyBOT.Modules
         {
             if (this.Context.User is SocketGuildUser user)
             {
-                await user.ModifyAsync(x => x.Nickname = name).ConfigureAwait(false);
-                await this.ReplyAsync($"{user.Mention} I changed your name to **{name}**").ConfigureAwait(false);
+                await user.ModifyAsync(x => x.Nickname = name);
+                await this.ReplyAsync($"{user.Mention} I changed your name to **{name}**");
             }
         }
 
@@ -50,8 +50,8 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.User)]
         public async Task FactCmdAsync()
         {
-            var factToPost = await this.service.GetFactAsync().ConfigureAwait(false);
-            await this.ReplyAsync(factToPost).ConfigureAwait(false);
+            var factToPost = await this.service.GetFactAsync();
+            await this.ReplyAsync(factToPost);
         }
 
         [Command("quote"), Alias("q")]
@@ -68,7 +68,7 @@ namespace LennyBOT.Modules
                     continue;
                 }
 
-                msg = await ch.GetMessageAsync(id).ConfigureAwait(false);
+                msg = await ch.GetMessageAsync(id);
                 if (msg != null)
                 {
                     break;
@@ -78,14 +78,14 @@ namespace LennyBOT.Modules
             var attachmentUrl = string.Empty;
             if (msg == null)
             {
-                await this.ReplyAsync($"Could not find message with id {id} in this guild.").ConfigureAwait(false);
+                await this.ReplyAsync($"Could not find message with id {id} in this guild.");
                 return;
             }
 
             if (msg.Embeds.Count != 0)
             {
                 var embed = msg.Embeds.FirstOrDefault() as Embed;
-                await this.ReplyAsync(msg.Content, false, embed).ConfigureAwait(false);
+                await this.ReplyAsync(msg.Content, false, embed);
                 return;
             }
 
@@ -103,7 +103,7 @@ namespace LennyBOT.Modules
                 .WithTimestamp(msg.EditedTimestamp ?? msg.Timestamp).WithImageUrl(attachmentUrl).WithAuthor(
                     new EmbedAuthorBuilder().WithName(nick ?? string.Empty)
                         .WithIconUrl(author?.GetAvatarUrl() ?? string.Empty));
-            await this.ReplyAsync(string.Empty, false, builder.Build()).ConfigureAwait(false);
+            await this.ReplyAsync(string.Empty, false, builder.Build());
         }
 
         [Command("quote"), Alias("q")]
@@ -203,12 +203,6 @@ namespace LennyBOT.Modules
                     case '-':
                         stringBuilder.Append(":heavy_minus_sign: ");
                         break;
-                    /*case '×':
-                        stringBuilder.Append(":heavy_multiplication_x: ");
-                        break;
-                    case '÷':
-                        stringBuilder.Append(":heavy_division_sign: ");
-                        break;*/
                     case '$':
                         stringBuilder.Append(":heavy_dollar_sign: ");
                         break;
@@ -222,7 +216,7 @@ namespace LennyBOT.Modules
 
             /*[Command("fuck"), Remarks("Gives a random fuck about your useless fucking command.")]
             public async Task FoaasAsync(IGuildUser user = null)
-                => await this.ReplyAsync(await FOAAS.RandomAsync(From: this.Context.User.Username, Name: user != null ? GetNickname(user) : "Kevin").ConfigureAwait(false)).ConfigureAwait(false);
+                => await this.ReplyAsync(await FOAAS.RandomAsync(From: this.Context.User.Username, Name: user != null ? GetNickname(user) : "Kevin"));
             */
         }
     }

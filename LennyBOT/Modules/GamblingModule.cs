@@ -32,7 +32,7 @@ namespace LennyBOT.Modules
         public async Task LeaderboardAsync()
         {
             this.Shekels.Context = this.Context;
-            var players = await this.Shekels.DownloadAsync().ConfigureAwait(false);
+            var players = await this.Shekels.DownloadAsync();
             players = players.OrderByDescending(p => p.Shekels).ToList();
             var stringBuilder = new StringBuilder();
             var i = 1;
@@ -67,7 +67,7 @@ namespace LennyBOT.Modules
             var embedB = new EmbedBuilder().WithCurrentTimestamp().WithColor(Color.Gold)
                 .WithDescription(stringBuilder.ToString()).WithThumbnailUrl(
                     "https://new4.fjcdn.com/comments/Gt+yfw+you+realize+you+can+trick+your+drug+dealer+_b143ce67137a8d88d6829f20a4b35073.png");
-            await this.ReplyAsync(string.Empty, false, embedB.Build()).ConfigureAwait(false);
+            await this.ReplyAsync(string.Empty, false, embedB.Build());
         }
 
         [Command("check"), Alias("shekels"), Remarks("")]
@@ -77,30 +77,30 @@ namespace LennyBOT.Modules
             user = user ?? this.Context.User as SocketGuildUser;
             if (user == null)
             {
-                await this.ReactAsync(Question).ConfigureAwait(false);
+                await this.ReactAsync(Question);
                 return;
             }
 
-            var player = await this.Shekels.GetPlayerAsync(user).ConfigureAwait(false);
-            await this.ReplyAsync($"**{GetNickname(user)}**: {player.Shekels} Shekels").ConfigureAwait(false);
+            var player = await this.Shekels.GetPlayerAsync(user);
+            await this.ReplyAsync($"**{GetNickname(user)}**: {player.Shekels} Shekels");
         }
 
         [Command("slots all"), Remarks("")]
         public async Task PlaySlotsAllAsync()
         {
             this.Shekels.Context = this.Context;
-            var player = await this.Shekels.GetPlayerAsync(this.Context.User).ConfigureAwait(false);
-            await this.PlaySlotsAsync(player.Shekels).ConfigureAwait(false);
+            var player = await this.Shekels.GetPlayerAsync(this.Context.User);
+            await this.PlaySlotsAsync(player.Shekels);
         }
 
         [Command("slots"), Remarks("")]
         public async Task PlaySlotsAsync(int inputCoins)
         {
             this.Shekels.Context = this.Context;
-            var player = await this.Shekels.GetPlayerAsync(this.Context.User).ConfigureAwait(false);
+            var player = await this.Shekels.GetPlayerAsync(this.Context.User);
             if (!player.HasEnough(inputCoins))
             {
-                await this.ReactAsync(Fail).ConfigureAwait(false);
+                await this.ReactAsync(Fail);
                 return;
             }
 
@@ -123,7 +123,7 @@ namespace LennyBOT.Modules
                 var coinsWon = inputCoins * 2;
                 sb.Append(
                     $"**{GetNickname(this.Context.User)}** bet **{inputCoins}** coin(s) and won **{coinsWon}** coin(s).\n");
-                await this.Shekels.AddShekelsToPlayerAsync(player, coinsWon).ConfigureAwait(false);
+                await this.Shekels.AddShekelsToPlayerAsync(player, coinsWon);
             }
             else if (one == two || two == three || one == three)
             {
@@ -131,17 +131,17 @@ namespace LennyBOT.Modules
                 var coinsWon = inputCoins;
                 sb.Append(
                     $"**{GetNickname(this.Context.User)}** bet **{inputCoins}** coin(s) and won **{coinsWon}** coin(s).\n");
-                await this.Shekels.AddShekelsToPlayerAsync(player, coinsWon).ConfigureAwait(false);
+                await this.Shekels.AddShekelsToPlayerAsync(player, coinsWon);
             }
             else
             {
                 sb.Append("| : : :  **LOST**  : : : |\n\n");
                 sb.Append($"**{GetNickname(this.Context.User)}** bet **{inputCoins}** coin(s) and lost.\n");
-                await this.Shekels.AddShekelsToPlayerAsync(player, -inputCoins).ConfigureAwait(false);
+                await this.Shekels.AddShekelsToPlayerAsync(player, -inputCoins);
             }
 
             sb.Append($"Current balance: {player.Shekels} shekels");
-            await this.ReplyAsync(sb.ToString()).ConfigureAwait(false);
+            await this.ReplyAsync(sb.ToString());
         }
     }
 }

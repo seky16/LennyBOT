@@ -32,9 +32,9 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.BotOwner)]
         public async Task ExitCmdAsync()
         {
-            await this.ReplyAsync("Shutting down... :zzz:").ConfigureAwait(false);
-            await this.Context.Client.SetStatusAsync(UserStatus.Invisible).ConfigureAwait(false);
-            await this.Context.Client.StopAsync().ConfigureAwait(false);
+            await this.ReplyAsync("Shutting down... :zzz:");
+            await this.Context.Client.SetStatusAsync(UserStatus.Invisible);
+            await this.Context.Client.StopAsync();
             Environment.Exit(1);
         }
 
@@ -43,13 +43,13 @@ namespace LennyBOT.Modules
         [MinPermissions(AccessLevel.BotOwner)]
         public async Task RestartCmdAsync()
         {
-            var msg = await this.ReplyAsync("Restarting... :arrows_counterclockwise:").ConfigureAwait(false);
-            await this.Client.StopAsync().ConfigureAwait(false);
-            await this.Client.LogoutAsync().ConfigureAwait(false);
-            await this.Client.LoginAsync(TokenType.Bot, Configuration.Load().Token).ConfigureAwait(false);
-            await this.Client.StartAsync().ConfigureAwait(false);
-            ////await msg.AddReactionAsync(EmojiExtensions.FromText(":white_check_mark:")).ConfigureAwait(false);
-            await msg.ModifyAsync(m => m.Content = "Restarted :white_check_mark:").ConfigureAwait(false);
+            var msg = await this.ReplyAsync("Restarting... :arrows_counterclockwise:");
+            await this.Client.StopAsync();
+            await this.Client.LogoutAsync();
+            await this.Client.LoginAsync(TokenType.Bot, Configuration.Load().Token);
+            await this.Client.StartAsync();
+            ////await msg.AddReactionAsync(EmojiExtensions.FromText(":white_check_mark:"));
+            await msg.ModifyAsync(m => m.Content = "Restarted :white_check_mark:");
         }
 
         [Command("botnick")]
@@ -58,10 +58,10 @@ namespace LennyBOT.Modules
         public async Task BotNickCmdAsync([Remainder]string name)
         {
             var iguild = this.Context.Guild as IGuild;
-            var self = await iguild.GetCurrentUserAsync().ConfigureAwait(false);
-            await self.ModifyAsync(x => x.Nickname = name).ConfigureAwait(false);
+            var self = await iguild.GetCurrentUserAsync();
+            await self.ModifyAsync(x => x.Nickname = name);
 
-            await this.ReplyAsync($"I changed my name to **{name}**").ConfigureAwait(false);
+            await this.ReplyAsync($"I changed my name to **{name}**");
         }
 
         [Command("playing")]
@@ -81,7 +81,7 @@ namespace LennyBOT.Modules
         {
             if (amount <= 0)
             {
-                await this.ReplyAsync("Invalid amount").ConfigureAwait(false);
+                await this.ReplyAsync("Invalid amount");
             }
 
             if (!(this.Context.Channel is SocketTextChannel ch))
@@ -96,25 +96,25 @@ namespace LennyBOT.Modules
             // messages = messages.Take(amount).Where(m => ((DateTimeOffset.Now - m.Timestamp) < TimeSpan.FromDays(14)));
             // .Skip(Math.Max(0, messages.Count() - amount)); // https://stackoverflow.com/a/3453301
             bool old;
-            var lastMessage = (await ch.GetMessagesAsync().Flatten().ConfigureAwait(false))?.FirstOrDefault();
+            var lastMessage = (await ch.GetMessagesAsync().Flatten())?.FirstOrDefault();
             IEnumerable<IMessage> messages = new[] { lastMessage };
             do
             {
-                var newMessages = await ch.GetMessagesAsync(messages.LastOrDefault().Id, Direction.Before).Flatten().ConfigureAwait(false);
+                var newMessages = await ch.GetMessagesAsync(messages.LastOrDefault().Id, Direction.Before).Flatten();
                 messages = messages.Concat(newMessages);
                 old = messages.Any(m => ((DateTimeOffset.Now - m.Timestamp) > TimeSpan.FromDays(14)));
             }
             while (!old);
             messages = messages.Where(m => ((DateTimeOffset.Now - m.Timestamp) < TimeSpan.FromDays(14)))
                 .Where(m => m.Author.Id == user.Id).Take(amount);
-            await ch.DeleteMessagesAsync(messages).ConfigureAwait(false);
+            await ch.DeleteMessagesAsync(messages);
             var str = string.Empty;
             if (messages.Count() < amount)
             {
                 str = "\n*(Other messages were older than two weeks so they cannot be deleted)*";
             }
 
-            await this.ReplyAsync($"Deleted {messages.Count()} messages of user **{nick}**.{str}").ConfigureAwait(false);
+            await this.ReplyAsync($"Deleted {messages.Count()} messages of user **{nick}**.{str}");
         }*/
     }
 }
