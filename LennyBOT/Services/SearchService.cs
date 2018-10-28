@@ -93,24 +93,31 @@ namespace LennyBOT.Services
                 case 0:
                     state = "Offline";
                     break;
+
                 case 1:
                     state = "Online";
                     break;
+
                 case 2:
                     state = "Busy";
                     break;
+
                 case 3:
                     state = "Away";
                     break;
+
                 case 4:
                     state = "Snooze";
                     break;
+
                 case 5:
                     state = "Looking to trade";
                     break;
+
                 case null:
                     state = null;
                     break;
+
                 default:
                     state = "Looking to play";
                     break;

@@ -3,7 +3,7 @@ namespace LennyBOT.Services
 {
     using System;
     using System.Security.Cryptography;
-    
+
     public class RandomService
     {
         /// <summary>

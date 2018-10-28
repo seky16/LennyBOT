@@ -12,6 +12,7 @@ namespace LennyBOT.Config
     {
         // ReSharper disable StyleCop.SA1602
         Blocked,
+
         User,
         ServerMod,
         ServerAdmin,

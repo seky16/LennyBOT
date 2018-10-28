@@ -4,7 +4,6 @@ namespace LennyBOT.Extensions
     using System.Threading.Tasks;
 
     using Discord;
-    using Discord.WebSocket;
 
     public static class MessageExtention
     {

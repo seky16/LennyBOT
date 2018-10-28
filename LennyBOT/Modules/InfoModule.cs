@@ -80,10 +80,10 @@ namespace LennyBOT.Modules
             {
                 var prefix = Configuration.Load().Prefix.ToString();
                 var builder = new EmbedBuilder
-                                  {
-                                      Color = new Color(114, 137, 218),
-                                      Description = "These are the commands you can use:"
-                                  };
+                {
+                    Color = new Color(114, 137, 218),
+                    Description = "These are the commands you can use:"
+                };
 
                 foreach (var module in this.service.Modules)
                 {
@@ -131,10 +131,10 @@ namespace LennyBOT.Modules
                 }
 
                 var builder = new EmbedBuilder
-                                  {
-                                      Color = new Color(114, 137, 218),
-                                      Description = $"Here are some commands like **{command}**"
-                                  };
+                {
+                    Color = new Color(114, 137, 218),
+                    Description = $"Here are some commands like **{command}**"
+                };
 
                 foreach (var match in result.Commands)
                 {

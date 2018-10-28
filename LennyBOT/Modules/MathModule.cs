@@ -4,11 +4,9 @@
 namespace LennyBOT.Modules
 {
     using System;
-    using System.Data;
     using System.Globalization;
     using System.Net.Http;
     using System.Threading.Tasks;
-    using System.Web;
 
     using Discord;
     using Discord.Addons.EmojiTools;
@@ -18,9 +16,6 @@ namespace LennyBOT.Modules
     using FixerSharp;
 
     using LennyBOT.Config;
-    using LennyBOT.Extensions;
-
-    using Newtonsoft.Json.Linq;
 
     [Name("Math")]
     public class MathModule : LennyBase

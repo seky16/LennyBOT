@@ -11,7 +11,7 @@ namespace LennyBOT.Services
 
     public class TagService
     {
-    public static void CreateTag(string name, string content, ulong ownerId)
+        public static void CreateTag(string name, string content, ulong ownerId)
         {
             var createdTag = new Tag(name, content, ownerId);
             var jsonString = File.ReadAllText("Files/tags.json");

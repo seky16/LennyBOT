@@ -6,7 +6,6 @@ namespace LennyBOT.Modules
     using System.Threading.Tasks;
 
     using Discord;
-    using Discord.Addons.EmojiTools;
     using Discord.Commands;
     using Discord.WebSocket;
 

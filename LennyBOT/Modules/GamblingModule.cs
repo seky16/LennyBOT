@@ -49,12 +49,15 @@ namespace LennyBOT.Modules
                     case 1:
                         stringBuilder.Append($"{EmojiExtensions.FromText(":first_place:")} ");
                         break;
+
                     case 2:
                         stringBuilder.Append($"{EmojiExtensions.FromText(":second_place:")} ");
                         break;
+
                     case 3:
                         stringBuilder.Append($"{EmojiExtensions.FromText(":third_place:")} ");
                         break;
+
                     default:
                         stringBuilder.Append($"{i}. ");
                         break;

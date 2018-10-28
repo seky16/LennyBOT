@@ -9,8 +9,10 @@ namespace LennyBOT.Models
     {
         [JsonProperty("success")]
         public bool IsSuccess { get; set; }
+
         [JsonProperty("count")]
         public int Count { get; set; }
+
         [JsonProperty("result")]
         public List<VideoModel> VideoModel { get; set; }
     }
@@ -20,12 +22,16 @@ namespace LennyBOT.Models
     {
         [JsonProperty("url")]
         public string VideoUrl { get; set; }
+
         [JsonProperty("thumb")]
         public string VideoThumb { get; set; }
+
         [JsonProperty("title")]
         public string VideoTitle { get; set; }
+
         [JsonProperty("duration")]
         public int Duration { get; set; }
+
         [JsonProperty("views")]
         public int Views { get; set; }
     }

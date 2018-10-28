@@ -20,26 +20,27 @@ namespace LennyBOT
 
         // Keep the CommandService and IServiceCollection around for use with commands.
         private readonly IServiceCollection map = new ServiceCollection();
+
         private readonly CommandService commands = new CommandService();
         private IServiceProvider services;
 
         private Program()
         {
             this.client = new DiscordSocketClient(new DiscordSocketConfig
-                                                      {
-                                                          // How much logging do you want to see?
-                                                          LogLevel = LogSeverity.Info,
+            {
+                // How much logging do you want to see?
+                LogLevel = LogSeverity.Info,
 
-                                                          // If you or another service needs to do anything with messages
-                                                          // (eg. checking Reactions, checking the content of edited/deleted messages),
-                                                          // you must set the MessageCacheSize. You may adjust the number as needed.
-                                                          MessageCacheSize = 1000,
+                // If you or another service needs to do anything with messages
+                // (eg. checking Reactions, checking the content of edited/deleted messages),
+                // you must set the MessageCacheSize. You may adjust the number as needed.
+                MessageCacheSize = 1000,
 
-                                                          // If your platform doesn't have native websockets,
-                                                          // add Discord.Net.Providers.WS4Net from NuGet,
-                                                          // add the `using` at the top, and uncomment this line:
-                                                          // WebSocketProvider = WS4NetProvider.Instance
-                                                      });
+                // If your platform doesn't have native websockets,
+                // add Discord.Net.Providers.WS4Net from NuGet,
+                // add the `using` at the top, and uncomment this line:
+                // WebSocketProvider = WS4NetProvider.Instance
+            });
         }
 
         // Program entry point
@@ -60,9 +61,11 @@ namespace LennyBOT
                 case LogSeverity.Error:
                     Console.ForegroundColor = ConsoleColor.Red;
                     break;
+
                 case LogSeverity.Warning:
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     break;
+
                 case LogSeverity.Info:
                     Console.ForegroundColor = ConsoleColor.White;
                     break;
@@ -74,7 +77,7 @@ namespace LennyBOT
                     break;
             }
 
-            Console.WriteLine($"{DateTime.Now, -19} [{message.Severity, 8}] {message.Source}: {message.Message}");
+            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message}");
             Console.ForegroundColor = cc;
 
             // If you get an error saying 'CompletedTask' doesn't exist,
@@ -129,7 +132,7 @@ namespace LennyBOT
             // Either search the program and add all Module classes that can be found.
             // Module classes *must* be marked 'public' or they will be ignored.
             Console.WriteLine("add modules");
-            await this.commands.AddModulesAsync(Assembly.GetEntryAssembly(), services);
+            await commands.AddModulesAsync(Assembly.GetEntryAssembly(), services);
 
             // Or add Modules manually if you prefer to be a little more explicit:
             // await _commands.AddModuleAsync<SomeModule>();

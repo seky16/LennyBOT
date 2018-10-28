@@ -33,9 +33,11 @@ namespace LennyBOT.Modules
                 case 1:
                     res = "Heads";
                     break;
+
                 case 2:
                     res = "Tails";
                     break;
+
                 default:
                     res = "err";
                     break;

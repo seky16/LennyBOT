@@ -7,16 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.9.9" />
+    <PackageReference Include="AngleSharp" Version="0.9.10" />
     <PackageReference Include="CanducciShortUrl" Version="1.0.0" />
-    <PackageReference Include="Cookie" Version="2.7.2" />
-    <PackageReference Include="CsfdAPI" Version="2017.11.11.21" />
+    <PackageReference Include="Cookie" Version="3.1.0" />
+    <PackageReference Include="CsfdAPI" Version="2018.1.20.1" />
     <PackageReference Include="Discord.Addons.EmojiTools" Version="2.0.2" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta-00859" />
-    <PackageReference Include="FixerSharp" Version="1.2.0" />
-    <PackageReference Include="NodaTime" Version="2.3.0-beta01" />
-    <PackageReference Include="SteamStoreQuery" Version="1.0.3" />
-    <PackageReference Include="SteamWebAPI" Version="1.0.14.42195" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-01018" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-01018" />
+    <PackageReference Include="Discord.Net.Core" Version="2.0.0-beta2-01018" />
+    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-beta2-01018" />
+    <PackageReference Include="Discord.Net.Rpc" Version="2.0.0-beta-00860" />
+    <PackageReference Include="Discord.Net.Webhook" Version="2.0.0-beta2-01018" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta2-01018" />
+    <PackageReference Include="FixerSharp" Version="1.2.1" />
+    <PackageReference Include="NodaTime" Version="2.4.1" />
+    <PackageReference Include="SteamStoreQuery" Version="1.0.4" />
+    <PackageReference Include="SteamWebAPI" Version="2.0.1" />
   </ItemGroup>
 
   <ItemGroup>

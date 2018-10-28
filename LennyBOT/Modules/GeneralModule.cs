@@ -6,8 +6,6 @@ namespace LennyBOT.Modules
     using System.Text;
     using System.Threading.Tasks;
 
-    using Cookie.FOAAS;
-
     using Discord;
     using Discord.Commands;
     using Discord.WebSocket;
@@ -161,51 +159,67 @@ namespace LennyBOT.Modules
                     case 'z':
                         stringBuilder.Append($":regional_indicator_{ch}: ");
                         break;
+
                     case '0':
                         stringBuilder.Append(":zero: ");
                         break;
+
                     case '1':
                         stringBuilder.Append(":one: ");
                         break;
+
                     case '2':
                         stringBuilder.Append(":two: ");
                         break;
+
                     case '3':
                         stringBuilder.Append(":three: ");
                         break;
+
                     case '4':
                         stringBuilder.Append(":four: ");
                         break;
+
                     case '5':
                         stringBuilder.Append(":five: ");
                         break;
+
                     case '6':
                         stringBuilder.Append(":six: ");
                         break;
+
                     case '7':
                         stringBuilder.Append(":seven: ");
                         break;
+
                     case '8':
                         stringBuilder.Append(":eight: ");
                         break;
+
                     case '9':
                         stringBuilder.Append(":nine: ");
                         break;
+
                     case '!':
                         stringBuilder.Append(":exclamation: ");
                         break;
+
                     case '?':
                         stringBuilder.Append(":question: ");
                         break;
+
                     case '+':
                         stringBuilder.Append(":heavy_plus_sign: ");
                         break;
+
                     case '-':
                         stringBuilder.Append(":heavy_minus_sign: ");
                         break;
+
                     case '$':
                         stringBuilder.Append(":heavy_dollar_sign: ");
                         break;
+
                     default:
                         stringBuilder.Append($"**{ch.ToString().ToUpper()}** ");
                         break;

@@ -10,7 +10,6 @@ namespace LennyBOT.Modules
     using Discord.Commands;
 
     using LennyBOT.Config;
-    using LennyBOT.Extensions;
     using LennyBOT.Services;
 
     [Group("tag")]

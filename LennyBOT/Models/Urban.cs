@@ -9,8 +9,10 @@ namespace LennyBOT.Models
     {
         [JsonProperty("definition")]
         public string Definition { get; set; }
+
         [JsonProperty("word")]
         public string Word { get; set; }
+
         [JsonProperty("example")]
         public string Example { get; set; }
     }
@@ -20,6 +22,7 @@ namespace LennyBOT.Models
     {
         [JsonProperty("tags")]
         public List<string> Tags { get; set; }
+
         [JsonProperty("list")]
         public List<List> List { get; set; }
     }
